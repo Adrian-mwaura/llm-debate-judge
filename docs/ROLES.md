@@ -2,10 +2,14 @@
 
 **Team:** Adrian Mwaura (GitHub `Adrian-mwaura`) and Varun Chopra (GitHub `varunchopra-088878`).
 
+**Status: proposed, not assigned yet.**
+Each of us says which role we want. If we both want the same one, we decide on a call.
+Once we've decided, record who has which role here, in a pull request the other person reviews.
+
 The work is split by pipeline stage, so the split holds whatever research question we pick.
 Each member owns their area and reviews the other's pull requests.
 
-| | Adrian: method lead | Varun: evaluation lead |
+| | Role A: method lead | Role B: evaluation lead |
 |---|---|---|
 | **Framework** | Debate engine (N agents × R rounds, majority vote); judge (pairwise, order swap, JSON verdict) | `chat()` helper (DeepSeek, cache, per-call token and cost log); loaders and scoring for GSM8K, MMLU-Pro and JudgeBench |
 | **Experiments** | Our new method; writing and tuning its prompts; pilot runs on small subsets | Baselines (chain-of-thought, self-consistency); baselines matched on cost; full runs; budget ledger |
