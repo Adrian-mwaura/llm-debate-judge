@@ -47,7 +47,7 @@ Record the choice and the hypothesis in `docs/NOTES.md` and in this section.
 Full detail is in `docs/ROLES.md`.
 
 - **Adrian, method lead:** debate engine, judge, the new method, prompts, pilot runs and error analysis.
-- **TEAMMATE, evaluation lead:** `chat()` helper, dataset loaders and scoring, baselines, cost matching, statistics, plots, the reproduce script and budget tracking.
+- **Varun, evaluation lead:** `chat()` helper, dataset loaders and scoring, baselines, cost matching, statistics, plots, the reproduce script and budget tracking.
 
 Every change is reviewed by the other member in a pull request before it is merged.
 

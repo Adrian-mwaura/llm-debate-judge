@@ -1,9 +1,11 @@
 # Roles and division of work
 
+**Team:** Adrian Mwaura (GitHub `Adrian-mwaura`) and Varun Chopra (GitHub `varunchopra-088878`).
+
 The work is split by pipeline stage, so the split holds whatever research question we pick.
 Each member owns their area and reviews the other's pull requests.
 
-| | Adrian: method lead | TEAMMATE: evaluation lead |
+| | Adrian: method lead | Varun: evaluation lead |
 |---|---|---|
 | **Framework** | Debate engine (N agents × R rounds, majority vote); judge (pairwise, order swap, JSON verdict) | `chat()` helper (DeepSeek, cache, per-call token and cost log); loaders and scoring for GSM8K, MMLU-Pro and JudgeBench |
 | **Experiments** | Our new method; writing and tuning its prompts; pilot runs on small subsets | Baselines (chain-of-thought, self-consistency); baselines matched on cost; full runs; budget ledger |

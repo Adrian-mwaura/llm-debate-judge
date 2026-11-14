@@ -20,7 +20,7 @@ Put the newest entries first in each section.
 
 | Date | Decision | Why | Who |
 |---|---|---|---|
-| 2026-11-14 | Split roles into method lead (Adrian) and evaluation lead (TEAMMATE) | The split works for any research question, and both of us write code | Both |
+| 2026-11-14 | Split roles into method lead (Adrian) and evaluation lead (Varun) | The split works for any research question, and both of us write code | Both |
 | 2026-11-14 | Match costs on logged tokens and dollars, not on the number of calls | Debate prompts get longer each round | Both |
 
 ## Budget ledger (cap: US$30)
