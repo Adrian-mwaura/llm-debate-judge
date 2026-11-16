@@ -26,8 +26,18 @@ The course provides no framework code, so we build the `debate-judge-baseline` f
 - **Evaluation harness:** loads GSM8K, MMLU-Pro and JudgeBench and scores answers against the answer key.
   It adds up tokens and cost, computes 95% confidence intervals, and runs paired tests (the same questions go to every method).
 
-**Research question:** not chosen yet. Pick one of questions 1–9 in the brief, or write our own with instructor approval.
-Record the choice and the hypothesis in `docs/NOTES.md` and in this section.
+**Research question: question 6, "Can a weak judge find the correct answer when two agents debate against each other?"**,
+run on JudgeBench as redesigned in `docs/research/question_selection.md` (section "Question 6 (second choice, redesigned on JudgeBench)").
+
+- **Hypothesis:** a non-thinking `deepseek-flash` judge is more accurate on JudgeBench after reading arguments from two thinking `deepseek-flash` debaters
+  than when it spends the same budget on extra votes. The benefit grows with the debaters' thinking effort,
+  and is larger on reasoning, math and coding pairs than on knowledge pairs.
+- **Setup:** each JudgeBench pair has one correct and one wrong response; one debater argues for each.
+  The judge sees the question, both responses and the arguments, and gives a verdict in both answer orders, scored with JudgeBench's rule.
+- **Same-cost baseline:** the non-thinking judge alone with k votes, k chosen to match each protocol's cost at list price.
+  A thinking judge alone is also reported on the same accuracy-vs-cost plot.
+- **Go/no-go pilot first:** if non-thinking `deepseek-flash` is not clearly a weaker judge than thinking `deepseek-flash`, switch to question 8.
+  Most code (JudgeBench loader, scoring, judge, vote baseline, thinking judge) is shared, so nothing is lost.
 
 ## Hard rules
 

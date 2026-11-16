@@ -6,6 +6,9 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-16:** Varun picked question 6 (weak judge, two debaters) on JudgeBench, matching Adrian's lean; final once Adrian approves the PR.
+  The question and hypothesis are recorded in `AGENTS.md`. Question 8 is the fallback if the go/no-go pilot fails.
+  PR #2 (research report) was reviewed by Varun and merged.
 - **2026-11-16:** Research on which question to pick is in `docs/research/question_selection.md`.
   It ranks question 8 (judge computation) first and question 6 (weak judge, two debaters), redesigned to run on JudgeBench, a close second.
   Adrian leans toward question 6. This is input for our meeting, not a decision. The proposal is due 2026-11-23.
@@ -20,8 +23,10 @@ Put the newest entries first in each section.
 ## Next steps
 
 - [x] Both: assign Role A and Role B, then record it in `docs/ROLES.md` in a pull request (merged in PR #1).
-- [ ] Both: read `docs/research/question_selection.md` before the meeting.
-- [ ] Both: choose the research question and write the 1-page proposal (`report/proposal.md`), due 2026-11-23.
+- [x] Both: read `docs/research/question_selection.md` before the meeting.
+- [x] Both: choose the research question (question 6 on JudgeBench, Adrian to confirm in the PR).
+- [ ] Both: write the 1-page proposal (`report/proposal.md`), due 2026-11-23.
+- [ ] Both: settle the go/no-go pilot rule. Varun's review suggests 200 pairs instead of 100, because 100 pairs give about ±10 points of noise on the judge gap, the same size as the 10-point threshold.
 - [ ] Evaluation lead (Varun): `chat()` helper with cache and call log; confirm the model id.
 - [ ] Method lead (Adrian): debate engine and judge on top of `chat()`.
 
@@ -29,6 +34,7 @@ Put the newest entries first in each section.
 
 | Date | Decision | Why | Who |
 |---|---|---|---|
+| 2026-11-16 | Research question: question 6 (weak judge, two debaters), run on JudgeBench; question 8 is the fallback | Most novel option; the JudgeBench redesign gives a real strength gap and simpler protocols; a fair null result is acceptable under the brief; code is shared with question 8 | Varun, matching Adrian's lean; Adrian to confirm |
 | 2026-11-16 | Varun is Role B (evaluation lead), Adrian is Role A (method lead) | Varun chose Role B; final once Adrian approves the PR | Varun |
 | 2026-11-14 | Proposed two roles, Role A (method lead) and Role B (evaluation lead); each of us picks one, and a tie is settled on a call | The split works for any research question, both of us write code, and Varun should choose rather than be assigned | Adrian |
 | 2026-11-14 | Match costs on logged tokens and dollars, not on the number of calls | Debate prompts get longer each round | Both |
@@ -49,6 +55,8 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-16 | Varun | Recorded the question 6 choice and hypothesis in `AGENTS.md` and these notes | Claude Code made the edits; Varun reviewed the diff |
+| 2026-11-16 | Varun | Reviewed PR #2 (research report) twice and merged it | Claude Code checked that it merges cleanly and recomputed the scores, cost totals and confidence intervals; findings posted as a review comment (pilot size, vote cap) |
 | 2026-11-16 | Adrian | Research report comparing the nine questions | Claude Code searched and read the sources (official DeepSeek docs, dataset pages, paper abstracts) and wrote the report; its limits section lists what was not verified; Adrian to review before the meeting |
 | 2026-11-16 | Varun | Recorded role choice in `docs/ROLES.md`, `AGENTS.md` and these notes | Claude Code made the edits; Varun reviewed the diff |
 | 2026-11-14 | Adrian | Repo setup, roles, shared agent context | Claude Code wrote the scaffold; Adrian reviewed the files |
