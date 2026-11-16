@@ -7,8 +7,8 @@ Put the newest entries first in each section.
 ## Status
 
 - **2026-11-16:** Research on which question to pick is in `docs/research/question_selection.md`.
-  It recommends question 8 (judge computation), with questions 7 and 6 as second and third choices.
-  This is input for our meeting, not a decision. The proposal is due 2026-11-23.
+  It ranks question 8 (judge computation) first and question 6 (weak judge, two debaters), redesigned to run on JudgeBench, a close second.
+  Adrian leans toward question 6. This is input for our meeting, not a decision. The proposal is due 2026-11-23.
   Facts for Varun's `chat()` helper: thinking is on by default and billed as output, `temperature` has no
   effect in thinking mode, and off-peak hours are half price (peak is 01:00–04:00 and 06:00–10:00 UTC on weekdays).
 - **2026-11-16:** Varun joined the repo and chose Role B (evaluation lead); Adrian takes Role A (method lead).

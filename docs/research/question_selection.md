@@ -3,6 +3,12 @@
 Research by Adrian with Claude Code, 2026-11-16. This is input for the meeting with Varun, not a decision.
 The proposal is due 2026-11-23.
 
+**Update, same day:** after discussing it, Adrian leans toward question 6.
+This version redesigns question 6 to run on JudgeBench instead of MMLU-Pro, which fixes two of its three problems,
+and moves it to a close second. See [the question 6 section](#6-can-a-weak-judge-find-the-right-answer-when-two-agents-debate)
+and [its sketch](#question-6-second-choice-redesigned-on-judgebench).
+The choice between 8 and 6 is now mainly about how much risk we accept.
+
 ## Recommendation
 
 **Pick question 8: "Does more computation make the judge more accurate?"**
@@ -18,8 +24,10 @@ Why this one:
 4. **The required plot is the result.** The brief asks for an accuracy-vs-cost plot, and for this question that plot is the main finding.
 5. **It uses everything we build.** The debate engine becomes one arm (two advocates argue, the judge decides), and question 7's bias analysis explains the errors.
 
-**Second choice: question 7** (judge bias). It is the safest and cheapest, and it reuses the same code, so it is also the fallback if question 8 hits a problem.
-**Third choice: question 6** (weak judge, two debaters). It is the most novel, but also the riskiest and the hardest to compare fairly at equal cost.
+**Close second: question 6** (weak judge, two debaters), redesigned to run on JudgeBench.
+It is the most novel option and asks a live AI-safety question, but a "debate did not help" result is likely.
+It shares most of its code with question 8, so question 8 stays available as a fallback.
+**Third choice: question 7** (judge bias). It is the safest and cheapest, and it reuses the same code.
 
 ## Facts that drive the choice
 
@@ -32,6 +40,7 @@ All of these are checked against primary sources (listed at the end).
 - **Peak hours are 01:00–04:00 and 06:00–10:00 UTC, Monday to Friday** (04:00–07:00 and 09:00–13:00 in UTC+3). Everything else, including weekends, is off-peak at half price. Running off-peak doubles our budget.
 - **Thinking is on by default**, at effort `high`. Thinking tokens are billed as output. Switch it with `extra_body={"thinking": {"type": "disabled"}}`, or set `reasoning_effort` to `none`, `low`, `high` or `max`. Our `chat()` helper must set this on every call, or every call silently pays for thinking.
 - **`temperature` has no effect in thinking mode.** We cannot tune how different the samples are when thinking is on.
+- **How much thinking helps depends on the task.** On the official V4-Flash model card, going from no thinking to effort `high` adds 3.4 points on MMLU-Pro, but 16.2 on GPQA Diamond, 21.3 on Humanity's Last Exam and 33.2 on LiveCodeBench.
 - `logprobs` (token probabilities) and JSON output are supported. There is no `n` or `seed` parameter, so k samples means k calls.
 - Input caching is automatic for repeated prefixes. The concurrency limit is 2,500 requests, so runs finish quickly.
 
@@ -41,7 +50,7 @@ All of these are checked against primary sources (listed at the end).
 |---|---|---|---|
 | GSM8K | 1,319 test questions | No official score for the chat model; the base model scores 90.8 with 8 examples | Very little. Frontier models are near the ceiling |
 | MMLU-Pro | 12,032 test questions, 10 options | V4-Flash: 83.0 without thinking, 86.4 with thinking `high` (official model card) | About 14–17 points, minus some label noise. Thinking adds only 3.4 points |
-| JudgeBench | 620 pairs (350 from GPT-4o, 270 from Claude 3.5 Sonnet), one correct and one wrong response each | Not published for V4.1 | Large. See the next table |
+| JudgeBench | 620 pairs (350 from GPT-4o, 270 from Claude 3.5 Sonnet), one correct and one wrong response each. Half are knowledge questions from MMLU-Pro (308); the rest are reasoning (149), math (90) and coding (73) | Not published for V4.1 | Large. See the next table |
 
 The official scores are for V4-Flash. `deepseek-flash` now points to V4.1-Flash, which I could not find official scores for.
 
@@ -79,8 +88,8 @@ Budget fit and risk are shown separately.
 | Rank | Question | Innovation | Design | Results | Score /75 | Est. cost | Risk |
 |---|---|---|---|---|---|---|---|
 | 1 | **8. More computation for the judge** | 4 | 5 | 5 | **69** | US$14–20 | Low |
-| 2 | 7. Judge bias and how to reduce it | 3 | 5 | 4 | 58 | US$8–12 | Low |
-| 3 | 6. Weak judge, two debaters | 5 | 3 | 3 | 57 | US$10–20 | High |
+| 2 | **6. Weak judge, two debaters (on JudgeBench)** | 5 | 4 | 3.5 | **63.5** | US$17–22 | Medium to high |
+| 3 | 7. Judge bias and how to reduce it | 3 | 5 | 4 | 58 | US$8–12 | Low |
 | 4 | 5. How much communication | 3 | 4 | 3 | 49 | US$15–20 | Medium |
 | 5 | 4. Agent confidence | 3 | 4 | 2.5 | 46.5 | US$15–20 | Medium |
 | 6 | 2. Thinking and non-thinking agents | 4 | 3 | 2 | 46 | US$23+ | High |
@@ -88,7 +97,9 @@ Budget fit and risk are shown separately.
 | 8 | 9. Judge and human experts | 2 | 2 | 3 | 35 | US$3–6 | Medium |
 | 9 | 1. Debate against majority vote | 1 | 4 | 2 | 32 | US$10–18 | Medium |
 
-The scores are my judgement from the evidence below. The ranking is stable at the top: question 8 leads on every criterion except innovation, where question 6 is ahead.
+The scores are my judgement from the evidence below. Question 8 leads on design and results; question 6 leads on innovation.
+On the MMLU-Pro design, question 6 scored 57 (design 3, results 3). Moving it to JudgeBench raises design to 4 and results to 3.5.
+Results stays below question 8's because a null result is likely and 620 pairs detect only large differences.
 
 ## The nine questions, one by one
 
@@ -133,11 +144,16 @@ The scores are my judgement from the evidence below. The ranking is stable at th
   Without hidden information, which is our case, results are mixed (Kenton et al. 2024).
   In 2026, Elasky et al. find debate helps only when the critic is clearly stronger than the judge, and that one critique gives most of the benefit. Carro et al. find debate helps human judges but not weaker LLM judges.
 - **In our favour:** the most novel option, and any clean result adds to a live debate.
-- **Problems for us:**
+- **Problems with the first design (on MMLU-Pro):**
   - We have one model, so "weak" has to mean a non-thinking judge against thinking debaters. On MMLU-Pro that gap is only 3.4 points.
   - The fair same-cost baseline is "let the judge think instead", which probably wins and undercuts the setup.
   - It is the most complex to build: assigned positions, multi-turn transcripts, a one-sided baseline.
-- **Verdict:** worth doing as one arm inside question 8, where the equal-cost comparison is the point.
+- **Redesign: run it on JudgeBench.** Every JudgeBench question already comes with one correct and one wrong written response, so each debater simply defends one of them. This fixes two of the three problems:
+  - **The strength gap becomes real.** Thinking adds 16–33 points on hard reasoning and coding (model card), and half of JudgeBench is reasoning, math and coding.
+    The other half is knowledge questions from MMLU-Pro, where the gap is small. That split is useful: it gives a second test of the idea, because debate should help more on the half where the debaters are much stronger than the judge.
+  - **It is simpler to build.** Elasky et al. (2026) found that removing the rebuttal rounds made no measurable difference, and one critique recovered most of debate's benefit. So one round of arguments, then a verdict, is enough.
+  - **The baseline is only partly fixed.** The weak judge is the premise, so the main same-cost baseline keeps the judge weak and gives it extra votes. A grader will still ask "why not just let the judge think?", so we report the thinking judge at the same cost too.
+- **Verdict:** a defensible pick after the redesign, and the most novel one. The main risk is a likely null result, which the brief accepts if the comparison is fair. Sketch below.
 
 ### 7. How biased is the DeepSeek judge, and how can we reduce it?
 
@@ -179,7 +195,47 @@ The scores are my judgement from the evidence below. The ranking is stable at th
   A fix for the last one is to build extra pairs from MMLU-Pro using `deepseek-flash`'s own right and wrong answers, following JudgeBench's recipe.
 - **Roles:** method lead builds the judge variants, the advocate debate and the escalation method. Evaluation lead builds the JudgeBench loader and scoring, cost matching, statistics and plots.
 
-### Question 7 (second choice)
+### Question 6 (second choice, redesigned on JudgeBench)
+
+- **Hypothesis:** a non-thinking `deepseek-flash` judge is more accurate on JudgeBench after reading arguments from two thinking debaters than when it spends the same budget on extra votes.
+  The benefit grows as the debaters think harder, and it shows on reasoning, math and coding pairs, where thinking helps most, more than on knowledge pairs.
+- **Setup:**
+  - Every pair has one correct and one wrong response. One debater is assigned each response and told to argue for it.
+  - Debaters are `deepseek-flash` with thinking on. The judge is `deepseek-flash` with thinking off: the "weak judge".
+  - The judge sees the question and both full responses, so it can check every claim. This is unlike Khan et al. (2024), where the judge could not see the source text.
+  - Every verdict is given in both answer orders and scored with JudgeBench's rule.
+- **Conditions,** all on the same 620 pairs, judge always non-thinking:
+  1. Judge alone: one verdict per order.
+  2. **Same-cost baseline:** judge alone with k votes, k chosen to match each protocol's cost.
+  3. Consultancy: one thinking debater argues for a randomly assigned response (correct half the time); the judge sees only that argument.
+  4. **One-round debate:** each debater, in one call, argues for its response and critiques the other. The judge reads both arguments. Debaters at effort `low`, `high` and `max`.
+  5. Two-round debate: adds one rebuttal each, on a 200-pair subset, to check whether more rounds add anything.
+  6. Reference: a thinking judge alone at effort `low` and `high`, reported at its cost on the same plot. This answers "why not just let the judge think?"
+- **What we contribute:**
+  - A clean strength gap inside one model: thinking against non-thinking.
+  - The gap varied two ways: by the debaters' effort (low, high, max), and by category, with the knowledge half (small gap) against the reasoning, math and coding half (large gap).
+  - A test of when debate starts to help a weak judge.
+- **Design rules from the literature:**
+  - Tell the judge to treat the debaters' statements as claims to check against the question and responses, not as testimony. Elasky et al. (2026) found debate gave no benefit when judges summarized critiques instead of checking them.
+  - Count concessions: how often a debater assigned the wrong response admits it is wrong. That is an honest signal, but it changes what we measure, so report it by condition.
+  - Match costs at list price, without the cache discount, so that repeated votes do not look cheaper than they are.
+- **Measures:** judge accuracy, split rate, concession rate and cost per pair, overall and by category, with 95% confidence intervals and paired tests.
+- **Statistics:** 620 pairs give about ±3.8 points and detect paired differences of about 6 points. Each half on its own (about 310 pairs) detects about 8–9 points, so the category comparison needs large effects.
+- **Go/no-go pilot, about US$1:** on 100 pairs, compare the non-thinking judge with the thinking judge, and measure thinking lengths and concessions.
+  If the thinking judge is not at least about 10 points better, the "weak judge" premise is too thin, and we switch to question 8 with no code lost.
+- **Estimated cost:** about US$19 off-peak with effort `max` on 300 pairs, and up to US$22 with `max` on all 620. Breakdown in the budget section.
+  This leaves less room under the US$30 cap than question 8, so pilot first and run off-peak.
+- **Risks:**
+  - A null result is likely. Kenton et al. (2024) found mixed results without hidden information, and Carro et al. (2026) found no comparable gain for weaker LLM judges.
+  - Thinking lengths at effort `max` are guesses, so cost could run higher.
+  - The weak judge may have a strong position bias, which adds noise. Scoring in both orders controls it.
+  - JudgeBench is public since 2024, so the model may have seen it in training.
+- **Roles:**
+  - Method lead (Adrian): debater and judge prompts, the consultancy and debate protocols, and concession detection.
+  - Evaluation lead (Varun): JudgeBench loader and both-order scoring, the vote baseline and cost matching, statistics, the category analysis and plots.
+- **Shared with question 8:** the loader, scoring, judge, vote baseline and thinking-judge conditions. Question 8 is a fallback at any point.
+
+### Question 7 (third choice)
 
 - **Hypothesis:** when unsure, `deepseek-flash` favours the second-listed response; the bias shrinks with thinking, and a cheap fix removes most of it for less than thinking costs.
 - **Experiment:** measure position preference and split rate on JudgeBench with thinking off and on. Then add controlled changes to the wrong response (markdown styling, padding, "wait, let me think" phrases) and measure how often the verdict flips.
@@ -187,16 +243,10 @@ The scores are my judgement from the evidence below. The ranking is stable at th
 - **Same-cost baseline:** voting.
 - **Estimated cost:** US$8–12.
 
-### Question 6 (third choice)
-
-- **Hypothesis:** a non-thinking judge is more accurate after a debate between two thinking debaters than after a one-sided argument, but no more accurate than it is alone at the same cost.
-- **Experiment:** about 500 MMLU-Pro questions. One debater gets the key answer and the other a wrong option. Compare judge alone, judge with votes at matched cost, one-sided argument, one critique, and a full debate.
-- **Estimated cost:** US$10–20, mostly thinking tokens for the debaters.
-- **Risks:** the model may refuse or hedge when told to defend a wrong answer; small capability gap; the baseline problem described above.
-
 ## Combined and own questions
 
-- **Question 8 with 7 and 6 inside it** is the recommendation. It is still question 8, so it needs no instructor approval.
+- **Question 8 with 7 and 6 inside it** is the safer recommendation. It is still question 8, so it needs no instructor approval.
+- **Question 6 on its own, redesigned on JudgeBench,** is the more novel one. Both options share most of their code, so the choice can wait until after the 100-pair pilot.
 - **Questions 3 and 4 together** ("does confidence stop errors spreading?") is the best debate-side option, but Zhu et al. (2026) and Hao et al. (2026) cover most of it, and the effects are small.
 - **An own question** I considered: use the right and wrong answers from our own debate logs as new judge test pairs, to test whether the judge favours its own model's answers. It fits better as an extension of question 8 than as a separate question.
 
@@ -214,6 +264,21 @@ Assumptions that a pilot must confirm: about 300 input and 400 output tokens for
 | Same, thinking `high` | about US$2.50 |
 | Same, thinking `max` | about US$6 |
 
+**Question 6 on JudgeBench, per condition over 620 pairs.** These assume thinking debaters write about 1,000 output tokens at effort `low`, 2,800 at `high` and 7,000 at `max`; those numbers are guesses for the pilot to replace.
+
+| Condition | Cost |
+|---|---|
+| Judge alone, non-thinking, both orders | about US$0.50 |
+| One-round debate, debaters at `low` | about US$1.70 |
+| One-round debate, debaters at `high` | about US$3.00 |
+| One-round debate, debaters at `max`, 300 pairs | about US$3.00 (US$6.10 for all 620) |
+| Consultancy, debater at `high` | about US$1.75 |
+| Two-round debate, debaters at `high`, 200 pairs | about US$1.85 |
+| Vote baseline, up to 12 votes per order (with cache) | about US$3.00 |
+| Thinking judge alone, `low` and `high` | about US$3.40 |
+| Pilot | about US$1 |
+| **Total** | **about US$19 (US$22 with `max` on all pairs)** |
+
 - **Confidence intervals:** at 83% accuracy, ±3.3 points with 500 questions and ±2.3 with 1,000. At 65% accuracy on 620 pairs, ±3.8.
 - **Smallest detectable difference with paired tests:** about 3 points needs roughly 700 questions; about 2 points needs 1,600; 1.3 points needs 3,700.
 - **Consequence:** the debate questions need 1,000 or more questions per condition and four or five conditions, which is US$17 or more for effects that may still be too small to see. The judge questions need under US$1 per cheap condition, and their effects are large.
@@ -225,6 +290,7 @@ Assumptions that a pilot must confirm: about 300 input and 400 output tokens for
 - "No one has done this" is a search result, not a proof. I searched in several ways and found nothing matching, which is the most I can say.
 - The official benchmark scores are for V4-Flash, not V4.1-Flash.
 - Token counts for thinking mode are estimates. A 50-pair pilot would replace them with real numbers.
+- The question 6 redesign rests on two things I have not tested on our model: that non-thinking `deepseek-flash` is a clearly weaker judge than thinking `deepseek-flash` on JudgeBench, and that thinking debaters keep arguing an assigned wrong response rather than conceding. The 100-pair pilot checks both.
 - One source I found, a large judge study (arXiv 2606.19544), has been withdrawn from arXiv, so I did not use it.
 - I do not know what the instructor prefers or what other teams will pick.
 
