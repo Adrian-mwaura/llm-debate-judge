@@ -80,6 +80,20 @@ Every change is reviewed by the other member in a pull request before it is merg
   `cost_usd` is the real spend (peak or off-peak, cache discount, 0 for our own cache hits); the budget ledger uses it.
 - Tests use a fake client and cost nothing: `python -m pytest`. `python scripts/check_model.py` checks the real API for under US$0.01.
 
+## Using the judge (built)
+
+`src/debate_judge/judge.py` and `src/debate_judge/prompts.py`; read their docstrings.
+
+- `judge_pair(pair, thinking=..., run=..., condition=...)` judges one JudgeBench pair in both answer orders.
+  `pair` uses JudgeBench's own fields: `pair_id`, `question`, `response_A`, `response_B` (`label` is not read here).
+- **`v.decisions` are both in the pair's original labels** ("A>B" means `response_A` won, in either order).
+  Do not flip the second one again when scoring; JudgeBench's published outputs keep it in swapped labels, ours don't.
+  A decision is `None` when the reply was incomplete or could not be parsed.
+- Debate arguments go in as `arguments={"A": ..., "B": ...}` in original labels; one entry means a one-sided argument.
+  They are relabeled for the swapped order, so each argument is generated once and reused for both orders.
+- For votes, call it with `sample=0..k-1`. Every call logs `prompt_version`; bump `JUDGE_PROMPT_VERSION` if the wording changes.
+- The prompts are frozen with a git tag before the pilot. Don't tune them on pilot pairs.
+
 ## Planned layout
 
 Update this section whenever the layout changes.
@@ -92,8 +106,9 @@ src/debate_judge/
   data.py         dataset loaders, answer extraction, scoring (evaluation lead)
   baselines.py    chain-of-thought, self-consistency        (evaluation lead)
   stats.py        confidence intervals, paired tests        (evaluation lead)
-  debate.py       debate engine                             (method lead)
-  judge.py        pairwise judge with order swap            (method lead)
+  prompts.py      judge (and later debater) prompt templates [judge built] (method lead)
+  debate.py       debaters: one-round debate, one-sided argument (method lead)
+  judge.py        pairwise judge in both answer orders [built] (method lead)
   methods/        our new method                            (method lead)
 scripts/          check_model.py [built]; run_baseline.sh, run_method.sh, make_table.py
 logs/             calls/<run>.jsonl call logs and cache/<xx>/<hash>.json (committed)
