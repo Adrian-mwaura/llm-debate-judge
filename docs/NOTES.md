@@ -6,6 +6,11 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-16:** Real-API check passed after Varun topped up US$10 (USD account). All four thinking levels are accepted:
+  thinking off gives 0 reasoning tokens; `low`, `high` and `max` give reasoning tokens, counted inside `completion_tokens`
+  and billed as output. Thinking mode adds about 26 prompt tokens per call (44 against 18 on the same question).
+  On a trivial question `low` and `high` used the same 18 reasoning tokens, so the pilot must measure how effort levels differ on real pairs.
+  Log: `logs/calls/check_model.jsonl`.
 - **2026-11-16:** Fixed all seven points from Adrian's review of PR #4: incomplete answers (`finish_reason != "stop"` or blank)
   are no longer cached and are flagged by `r.complete`; `.env` is loaded before `MODEL` and `LOG_DIR` are read; `logprobs` reach
   `ChatResult` and the log; identical concurrent calls are paid once (per-key lock); `temperature` is not sent in thinking mode;
@@ -38,7 +43,7 @@ Put the newest entries first in each section.
 - [ ] Both: settle the go/no-go pilot rule. Varun's review suggests 200 pairs instead of 100, because 100 pairs give about ±10 points of noise on the judge gap, the same size as the 10-point threshold.
 - [x] Evaluation lead (Varun): `chat()` helper with cache and call log (PR `varun/chat-helper`).
 - [x] Evaluation lead (Varun): confirm the model id (`deepseek-flash` is in the models list).
-- [ ] Evaluation lead (Varun): add credit, then rerun `python scripts/check_model.py` to confirm the thinking switch.
+- [x] Evaluation lead (Varun): add credit, then rerun `python scripts/check_model.py` to confirm the thinking switch (passed).
 - [ ] Evaluation lead (Varun): JudgeBench loader and both-order scoring (`data.py`), next.
 - [ ] Method lead (Adrian): debate engine and judge on top of `chat()`.
 
@@ -56,7 +61,9 @@ Put the newest entries first in each section.
 
 | Date | Who | Run | Dataset and number of questions | Cost (US$) | Total so far (US$) |
 |---|---|---|---|---|---|
-| | | | | | 0.00 |
+| 2026-11-16 | Varun | `check_model` (setup check, 6 tiny calls, all thinking levels, peak hours) | none; one arithmetic question | 0.0002 | 0.0002 |
+
+Account balances: Varun US$10.00 topped up (2026-11-16).
 
 ## Experiment log
 
