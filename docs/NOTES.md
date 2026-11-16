@@ -6,21 +6,24 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-16:** Varun joined the repo and chose Role B (evaluation lead); Adrian takes Role A (method lead).
+  Recorded in `docs/ROLES.md` and `AGENTS.md` on branch `varun/roles`, waiting for Adrian's review.
 - **2026-11-14:** Repo created. Two roles proposed (see `docs/ROLES.md`), not assigned yet.
   The course provides no framework code, so we build it ourselves.
   The research question is not chosen yet.
 
 ## Next steps
 
-- [ ] Both: assign Role A and Role B, then record it in `docs/ROLES.md` in a pull request.
+- [x] Both: assign Role A and Role B, then record it in `docs/ROLES.md` in a pull request (Adrian to review).
 - [ ] Both: choose the research question and write the 1-page proposal (`report/proposal.md`).
-- [ ] Evaluation lead: `chat()` helper with cache and call log; confirm the model id.
-- [ ] Method lead: debate engine and judge on top of `chat()`.
+- [ ] Evaluation lead (Varun): `chat()` helper with cache and call log; confirm the model id.
+- [ ] Method lead (Adrian): debate engine and judge on top of `chat()`.
 
 ## Decisions
 
 | Date | Decision | Why | Who |
 |---|---|---|---|
+| 2026-11-16 | Varun is Role B (evaluation lead), Adrian is Role A (method lead) | Varun chose Role B; final once Adrian approves the PR | Varun |
 | 2026-11-14 | Proposed two roles, Role A (method lead) and Role B (evaluation lead); each of us picks one, and a tie is settled on a call | The split works for any research question, both of us write code, and Varun should choose rather than be assigned | Adrian |
 | 2026-11-14 | Match costs on logged tokens and dollars, not on the number of calls | Debate prompts get longer each round | Both |
 
@@ -40,4 +43,5 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-16 | Varun | Recorded role choice in `docs/ROLES.md`, `AGENTS.md` and these notes | Claude Code made the edits; Varun reviewed the diff |
 | 2026-11-14 | Adrian | Repo setup, roles, shared agent context | Claude Code wrote the scaffold; Adrian reviewed the files |
