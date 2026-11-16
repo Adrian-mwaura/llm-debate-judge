@@ -61,21 +61,37 @@ Roles are assigned (full detail is in `docs/ROLES.md`):
 
 Every change is reviewed by the other member in a pull request before it is merged.
 
+## Using `chat()` (built)
+
+`src/debate_judge/llm.py` is done; read its docstring. The rules that matter for everyone:
+
+- Call `chat(messages, thinking=..., max_tokens=..., run=...)`. `thinking` is required: `"none"`, `"low"`, `"high"` or `"max"`.
+  With thinking on, `max_tokens` must leave room for the reasoning tokens.
+- `run` names the log file `logs/calls/<run>.jsonl`. Use one run name per experiment condition, e.g. `pilot_debate_high`.
+- For k votes, pass `sample=0..k-1`. The API has no `n` or `seed`, and identical requests with the same `sample` come from the disk cache.
+- Pass `meta={...}` (pair id, role, order) so the logs can be joined back to the data.
+- `chat_many(jobs)` runs calls in parallel; `summarize_log(run)` gives totals.
+- **Match methods on `cost_match_usd`** (off-peak list price, no cache discount; independent of time and caching).
+  `cost_usd` is the real spend (peak or off-peak, cache discount, 0 for our own cache hits); the budget ledger uses it.
+- Tests use a fake client and cost nothing: `python -m pytest`. `python scripts/check_model.py` checks the real API for under US$0.01.
+
 ## Planned layout
 
 Update this section whenever the layout changes.
 
 ```
+pyproject.toml    package metadata and pytest settings
+tests/            unit tests; no API calls
 src/debate_judge/
-  llm.py          chat() helper, cache, call log            (evaluation lead)
+  llm.py          chat() helper, cache, call log  [built]   (evaluation lead)
   data.py         dataset loaders, answer extraction, scoring (evaluation lead)
   baselines.py    chain-of-thought, self-consistency        (evaluation lead)
   stats.py        confidence intervals, paired tests        (evaluation lead)
   debate.py       debate engine                             (method lead)
   judge.py        pairwise judge with order swap            (method lead)
   methods/        our new method                            (method lead)
-scripts/          run_baseline.sh, run_method.sh, make_table.py
-logs/             JSONL call logs and cache (committed)
+scripts/          check_model.py [built]; run_baseline.sh, run_method.sh, make_table.py
+logs/             calls/<run>.jsonl call logs and cache/<xx>/<hash>.json (committed)
 results/          tables and plots (committed)
 report/           proposal and report drafts
 docs/             brief, roles, shared notes

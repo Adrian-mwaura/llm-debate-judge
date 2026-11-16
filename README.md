@@ -29,7 +29,14 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
+## Checking the setup
+
+```bash
+python -m pytest                 # unit tests, no API calls
+python scripts/check_model.py    # real API: confirms the model id and thinking switch, costs under US$0.01
+```
+
 ## Running
 
-Not built yet. The planned commands are `bash scripts/run_baseline.sh`, `bash scripts/run_method.sh`, and `python scripts/make_table.py`.
+The experiments are not built yet. The planned commands are `bash scripts/run_baseline.sh`, `bash scripts/run_method.sh`, and `python scripts/make_table.py`.
 The last one rebuilds the main results table from the committed logs.
