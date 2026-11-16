@@ -47,6 +47,8 @@ run on JudgeBench as redesigned in `docs/research/question_selection.md` (sectio
 - Compare every new method with a baseline at the same API cost.
   Match on logged tokens or dollars, not on the number of calls, because debate prompts get longer each round.
 - Every API call goes through `chat()`, so its tokens and cost are logged. Do not call the SDK directly anywhere else.
+  The only exception is unbilled, read-only calls (listing models, checking the balance), which may use `get_client()` directly,
+  as `scripts/check_model.py` does. Never use it for a completion.
 - Never commit API keys. The key goes in `.env`, which git ignores; `.env.example` shows the variable names.
 - Pilot every change on a small subset of 20–50 questions before a full run.
   Commit the call cache and logs so neither of us pays twice for the same call.
@@ -67,6 +69,9 @@ Every change is reviewed by the other member in a pull request before it is merg
 
 - Call `chat(messages, thinking=..., max_tokens=..., run=...)`. `thinking` is required: `"none"`, `"low"`, `"high"` or `"max"`.
   With thinking on, `max_tokens` must leave room for the reasoning tokens.
+- **Check `r.complete` before using `r.text`.** An answer cut off by `max_tokens` or a blank reply is returned and logged
+  (it was paid for) but never cached, so a rerun calls the API again.
+- `temperature` is only sent with thinking off; the API ignores it in thinking mode. Pass `logprobs=True` to get `r.logprobs`.
 - `run` names the log file `logs/calls/<run>.jsonl`. Use one run name per experiment condition, e.g. `pilot_debate_high`.
 - For k votes, pass `sample=0..k-1`. The API has no `n` or `seed`, and identical requests with the same `sample` come from the disk cache.
 - Pass `meta={...}` (pair id, role, order) so the logs can be joined back to the data.

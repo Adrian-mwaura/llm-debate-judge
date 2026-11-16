@@ -18,6 +18,7 @@ from debate_judge.llm import MODEL, chat, get_client  # noqa: E402
 
 
 def main() -> None:
+    # Listing models is free and read-only, the one kind of call AGENTS.md allows outside chat().
     models = sorted(m.id for m in get_client().models.list().data)
     print("Models available:", ", ".join(models))
     if MODEL not in models:
@@ -29,7 +30,7 @@ def main() -> None:
         r = chat(question, thinking=thinking, max_tokens=2000, run="check_model", use_cache=False)
         print(f"thinking={thinking:5s} answer={r.text.strip()!r:8s} prompt={r.prompt_tokens} "
               f"completion={r.completion_tokens} reasoning={r.reasoning_tokens} "
-              f"cost=${r.cost_usd:.6f} ({r.price_period}) finish={r.finish_reason}")
+              f"cost=${r.cost_usd:.6f} ({r.price_period}) finish={r.finish_reason} complete={r.complete}")
         if thinking == "none" and r.reasoning_tokens:
             print("  WARNING: thinking was off but reasoning tokens were billed. Check build_request().")
         if thinking == "low" and not r.reasoning_tokens:

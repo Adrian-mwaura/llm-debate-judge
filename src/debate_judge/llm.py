@@ -13,7 +13,15 @@ Typical use:
 
     from debate_judge.llm import chat
     r = chat([{"role": "user", "content": "2+2?"}], thinking="none", max_tokens=50, run="pilot_judge")
-    r.text, r.cost_usd, r.cost_match_usd
+    r.text, r.complete, r.cost_usd, r.cost_match_usd
+
+Incomplete answers:
+
+- An answer is complete only if finish_reason is "stop" and the text is not blank.
+  A thinking call can spend all of max_tokens on reasoning and return "" with finish_reason "length",
+  and JSON mode can return a blank reply. Incomplete answers are returned and logged (they were paid for),
+  but never written to the disk cache, so a rerun with a larger max_tokens, or a retry, calls the API again.
+  Check r.complete before using r.text.
 
 Costs:
 
@@ -36,8 +44,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
+from dotenv import load_dotenv
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# Load .env before reading any setting from the environment, so DEEPSEEK_MODEL and
+# DEBATE_JUDGE_LOG_DIR in .env take effect. Variables already set in the shell win.
+load_dotenv(REPO_ROOT / ".env")
+
 MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-flash")
 DEFAULT_BASE_URL = "https://api.deepseek.com"
+LOG_DIR = Path(os.environ.get("DEBATE_JUDGE_LOG_DIR", REPO_ROOT / "logs"))
 
 THINKING_LEVELS = ("none", "low", "high", "max")
 
@@ -50,9 +67,6 @@ PRICES = {
 # Peak hours in UTC, Monday to Friday: [start, end) in hours.
 PEAK_HOURS_UTC = ((1, 4), (6, 10))
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-LOG_DIR = Path(os.environ.get("DEBATE_JUDGE_LOG_DIR", REPO_ROOT / "logs"))
-
 Message = dict[str, str]
 
 
@@ -61,6 +75,7 @@ class ChatResult:
     text: str
     reasoning: str | None
     finish_reason: str | None
+    complete: bool
     prompt_tokens: int
     cache_hit_tokens: int
     completion_tokens: int
@@ -70,6 +85,7 @@ class ChatResult:
     price_period: str
     from_cache: bool
     key: str
+    logprobs: dict[str, Any] | None = None
     raw_usage: dict[str, Any] = field(default_factory=dict)
 
 
@@ -77,7 +93,12 @@ class ChatResult:
 
 
 def price_period(when: datetime) -> str:
-    """Return "peak" or "offpeak" for a moment in time."""
+    """Return "peak" or "offpeak" for a moment in time.
+
+    DeepSeek's pricing page also makes Chinese public holidays off-peak all day. They are not
+    handled here, so cost_usd is overstated on those days; none fall in our project window.
+    cost_match_usd does not depend on the time, so cost matching is unaffected.
+    """
     t = when.astimezone(timezone.utc)
     if t.weekday() >= 5:  # Saturday, Sunday
         return "offpeak"
@@ -117,12 +138,13 @@ def build_request(
     req: dict[str, Any] = {"model": MODEL, "messages": list(messages), "max_tokens": max_tokens}
     if thinking == "none":
         req["extra_body"] = {"thinking": {"type": "disabled"}}
+        if temperature is not None:
+            req["temperature"] = temperature
     else:
+        # The API ignores temperature in thinking mode, so it is not sent: sending it would only
+        # split the cache key and pay twice for the same compute. chat() still logs it.
         req["extra_body"] = {"thinking": {"type": "enabled"}}
         req["reasoning_effort"] = thinking
-    if temperature is not None:
-        # The API ignores temperature in thinking mode; we still record it.
-        req["temperature"] = temperature
     if json_mode:
         req["response_format"] = {"type": "json_object"}
     if logprobs:
@@ -139,18 +161,24 @@ def cache_key(request: dict[str, Any], sample: int) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
+def is_complete(finish_reason: str | None, text: str) -> bool:
+    """Only finished, non-blank answers are cached."""
+    return finish_reason == "stop" and bool(text.strip())
+
+
 # ---------------------------------------------------------------- client, cache and log
 
 _client = None
 _client_lock = threading.Lock()
 _log_lock = threading.Lock()
+_key_locks: dict[str, threading.Lock] = {}
+_key_locks_guard = threading.Lock()
 
 
 def get_client():
     global _client
     with _client_lock:
         if _client is None:
-            from dotenv import load_dotenv
             from openai import OpenAI
 
             load_dotenv(REPO_ROOT / ".env")
@@ -169,14 +197,30 @@ def set_client(client) -> None:
         _client = client
 
 
+def _key_lock(key: str) -> threading.Lock:
+    """One lock per cache key, so identical calls running at the same time are paid once:
+    the first makes the call and writes the cache, the others then read it."""
+    with _key_locks_guard:
+        lock = _key_locks.get(key)
+        if lock is None:
+            lock = _key_locks[key] = threading.Lock()
+        return lock
+
+
 def _cache_path(key: str) -> Path:
     return LOG_DIR / "cache" / key[:2] / f"{key}.json"
 
 
 def _read_cache(key: str) -> dict[str, Any] | None:
     path = _cache_path(key)
-    if not path.exists():
-        return None
+    for attempt in range(5):
+        if not path.exists():
+            return None
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except PermissionError:
+            # Windows: another process may be replacing the file right now.
+            time.sleep(0.05 * (attempt + 1))
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -185,6 +229,13 @@ def _write_cache(key: str, entry: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
     tmp.write_text(json.dumps(entry, ensure_ascii=False, indent=1), encoding="utf-8")
+    for attempt in range(5):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            # Windows: another process may be reading the file right now.
+            time.sleep(0.05 * (attempt + 1))
     os.replace(tmp, path)
 
 
@@ -214,8 +265,9 @@ def _parse_response(resp: Any) -> dict[str, Any]:
     details = usage.get("completion_tokens_details") or {}
     reasoning_tokens = int(details.get("reasoning_tokens") or 0)
     logprobs = None
-    if getattr(choice, "logprobs", None) is not None and hasattr(choice.logprobs, "model_dump"):
-        logprobs = choice.logprobs.model_dump()
+    raw_logprobs = getattr(choice, "logprobs", None)
+    if raw_logprobs is not None:
+        logprobs = raw_logprobs.model_dump() if hasattr(raw_logprobs, "model_dump") else dict(raw_logprobs)
     return {
         "text": msg.content or "",
         "reasoning": getattr(msg, "reasoning_content", None),
@@ -243,6 +295,26 @@ def _call_with_retries(request: dict[str, Any], retries: int) -> Any:
             time.sleep(min(60, 2**attempt) + random.random())
 
 
+def _fetch(request: dict[str, Any], key: str, sample: int, retries: int,
+           called_at: datetime) -> dict[str, Any]:
+    """Call the API and build a cache entry for the response."""
+    started = time.monotonic()
+    resp = _call_with_retries(request, retries)
+    parsed = _parse_response(resp)
+    period = price_period(called_at)
+    return {
+        "key": key,
+        "request": request,
+        "sample": sample,
+        "response": parsed,
+        "called_at": called_at.isoformat(),
+        "price_period": period,
+        "cost_usd": compute_cost(parsed["prompt_tokens"], parsed["cache_hit_tokens"],
+                                 parsed["completion_tokens"], period),
+        "latency_s": round(time.monotonic() - started, 3),
+    }
+
+
 # ---------------------------------------------------------------- public API
 
 
@@ -263,45 +335,39 @@ def chat(
 ) -> ChatResult:
     """Make one API call (or serve it from the disk cache) and log it.
 
-    thinking:   "none", "low", "high" or "max". Required, so nobody pays for thinking by accident.
-    max_tokens: required; with thinking on, it must leave room for the reasoning tokens too.
-    run:        name of the log file, logs/calls/<run>.jsonl, e.g. "pilot_judge".
-    sample:     index of an independent sample (0..k-1) for voting; part of the cache key.
-    meta:       anything to record with the call, e.g. {"pair_id": ..., "role": "debater_A"}.
+    thinking:    "none", "low", "high" or "max". Required, so nobody pays for thinking by accident.
+    max_tokens:  required; with thinking on, it must leave room for the reasoning tokens too.
+    run:         name of the log file, logs/calls/<run>.jsonl, e.g. "pilot_judge".
+    temperature: only sent with thinking="none"; the API ignores it in thinking mode. Always logged.
+    logprobs:    request token log-probabilities; returned in ChatResult.logprobs.
+    sample:      index of an independent sample (0..k-1) for voting; part of the cache key.
+    meta:        anything to record with the call, e.g. {"pair_id": ..., "role": "debater_A"}.
     """
     request = build_request(
         messages, thinking=thinking, max_tokens=max_tokens,
         temperature=temperature, json_mode=json_mode, logprobs=logprobs,
     )
     key = cache_key(request, sample)
-    called_at = now()
 
-    entry = _read_cache(key) if use_cache else None
-    from_cache = entry is not None
-    if entry is None:
-        started = time.monotonic()
-        resp = _call_with_retries(request, retries)
-        parsed = _parse_response(resp)
-        period = price_period(called_at)
-        entry = {
-            "key": key,
-            "request": request,
-            "sample": sample,
-            "response": parsed,
-            "called_at": called_at.isoformat(),
-            "price_period": period,
-            "cost_usd": compute_cost(parsed["prompt_tokens"], parsed["cache_hit_tokens"],
-                                     parsed["completion_tokens"], period),
-            "latency_s": round(time.monotonic() - started, 3),
-        }
-        if use_cache:
-            _write_cache(key, entry)
+    if use_cache:
+        with _key_lock(key):
+            entry = _read_cache(key)
+            from_cache = entry is not None
+            if entry is None:
+                entry = _fetch(request, key, sample, retries, now())
+                p = entry["response"]
+                if is_complete(p["finish_reason"], p["text"]):
+                    _write_cache(key, entry)
+    else:
+        entry = _fetch(request, key, sample, retries, now())
+        from_cache = False
 
     parsed = entry["response"]
     result = ChatResult(
         text=parsed["text"],
         reasoning=parsed["reasoning"],
         finish_reason=parsed["finish_reason"],
+        complete=is_complete(parsed["finish_reason"], parsed["text"]),
         prompt_tokens=parsed["prompt_tokens"],
         cache_hit_tokens=parsed["cache_hit_tokens"],
         completion_tokens=parsed["completion_tokens"],
@@ -311,6 +377,7 @@ def chat(
         price_period=entry["price_period"],
         from_cache=from_cache,
         key=key,
+        logprobs=parsed.get("logprobs"),
         raw_usage=parsed["usage"],
     )
 
@@ -334,24 +401,27 @@ def chat(
         "cost_match_usd": result.cost_match_usd,
         "price_period": result.price_period,
         "finish_reason": result.finish_reason,
+        "complete": result.complete,
         "messages": list(messages),
         "text": result.text,
+        "logprobs": result.logprobs,
     })
     return result
 
 
 def chat_many(jobs: Sequence[dict[str, Any]], *, workers: int = 32) -> list[ChatResult]:
     """Run many chat() calls in parallel. Each job is a dict of chat() keyword arguments
-    plus "messages". Results come back in the same order as the jobs."""
+    plus "messages". Results come back in the same order as the jobs. Identical jobs
+    (same request and sample) are paid once: the per-key lock makes the others wait for the cache."""
     with ThreadPoolExecutor(max_workers=workers) as pool:
         return list(pool.map(lambda job: chat(**job), jobs))
 
 
 def summarize_log(run: str) -> dict[str, Any]:
-    """Totals for one run's call log: calls, cache hits, tokens and both costs."""
+    """Totals for one run's call log: calls, cache hits, incomplete answers, tokens and both costs."""
     path = LOG_DIR / "calls" / f"{run}.jsonl"
-    totals = {"run": run, "calls": 0, "from_cache": 0, "prompt_tokens": 0, "completion_tokens": 0,
-              "reasoning_tokens": 0, "cost_usd": 0.0, "cost_match_usd": 0.0}
+    totals = {"run": run, "calls": 0, "from_cache": 0, "incomplete": 0, "prompt_tokens": 0,
+              "completion_tokens": 0, "reasoning_tokens": 0, "cost_usd": 0.0, "cost_match_usd": 0.0}
     if not path.exists():
         return totals
     with open(path, encoding="utf-8") as f:
@@ -361,13 +431,14 @@ def summarize_log(run: str) -> dict[str, Any]:
             r = json.loads(line)
             totals["calls"] += 1
             totals["from_cache"] += bool(r["from_cache"])
+            totals["incomplete"] += not r.get("complete", True)
             for k in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "cost_usd", "cost_match_usd"):
                 totals[k] += r[k]
     return totals
 
 
 __all__ = [
-    "ChatResult", "chat", "chat_many", "summarize_log", "set_client",
+    "ChatResult", "chat", "chat_many", "summarize_log", "set_client", "is_complete",
     "price_period", "compute_cost", "match_cost", "build_request", "cache_key",
     "MODEL", "THINKING_LEVELS", "PRICES",
 ]
