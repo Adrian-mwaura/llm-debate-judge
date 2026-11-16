@@ -2,9 +2,14 @@
 
 **Team:** Adrian Mwaura (GitHub `Adrian-mwaura`) and Varun Chopra (GitHub `varunchopra-088878`).
 
-**Status: proposed, not assigned yet.**
-Each of us says which role we want. If we both want the same one, we decide on a call.
-Once we've decided, record who has which role here, in a pull request the other person reviews.
+**Status: Varun chose Role B (evaluation lead), so Adrian takes Role A (method lead).**
+Adrian agrees to this split by approving and merging the pull request that records it.
+If Adrian would rather swap, we settle it on a call before merging.
+
+| Member | Role |
+|---|---|
+| Adrian Mwaura | Role A: method lead |
+| Varun Chopra | Role B: evaluation lead |
 
 The work is split by pipeline stage, so the split holds whatever research question we pick.
 Each member owns their area and reviews the other's pull requests.

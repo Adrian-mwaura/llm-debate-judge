@@ -44,11 +44,10 @@ Record the choice and the hypothesis in `docs/NOTES.md` and in this section.
 
 ## Roles
 
-The two roles are proposed but not assigned yet; full detail is in `docs/ROLES.md`.
-Update this section with names once we decide.
+Roles are assigned (full detail is in `docs/ROLES.md`):
 
-- **Role A, method lead:** debate engine, judge, the new method, prompts, pilot runs and error analysis.
-- **Role B, evaluation lead:** `chat()` helper, dataset loaders and scoring, baselines, cost matching, statistics, plots, the reproduce script and budget tracking.
+- **Role A, method lead (Adrian):** debate engine, judge, the new method, prompts, pilot runs and error analysis.
+- **Role B, evaluation lead (Varun):** `chat()` helper, dataset loaders and scoring, baselines, cost matching, statistics, plots, the reproduce script and budget tracking.
 
 Every change is reviewed by the other member in a pull request before it is merged.
 
