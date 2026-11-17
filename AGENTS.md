@@ -4,6 +4,8 @@ This file is the shared project context for both team members' coding agents.
 Claude Code loads it through `CLAUDE.md`; Codex, Cursor and other tools read `AGENTS.md` directly.
 Keep it current: if you change the plan, layout, rules or conventions, update this file in the same PR.
 The running log of status, decisions, runs and spend is in `docs/NOTES.md`. Read it at the start of every session.
+The schedule is in `docs/SCHEDULE.md`: everything finished by Friday 20 November. Check it at the start of every session,
+work on today's tasks, and say so if one is late.
 
 ## Project
 
@@ -114,7 +116,7 @@ scripts/          check_model.py [built]; run_baseline.sh, run_method.sh, make_t
 logs/             calls/<run>.jsonl call logs and cache/<xx>/<hash>.json (committed)
 results/          tables and plots (committed)
 report/           proposal and report drafts
-docs/             brief, roles, shared notes
+docs/             brief, roles, shared notes, schedule
 ```
 
 ## Workflow
