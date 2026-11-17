@@ -6,6 +6,12 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-17:** Varun built `src/debate_judge/data.py`: JudgeBench loader pinned to revision `57dd5e0` (620 pairs: 350 gpt, 270 claude;
+  308 knowledge, 149 reasoning, 90 math, 73 coding), fixed stratified subsets (20 dry-run pairs, never reported; 200 pilot pairs,
+  inside the 600 reported pairs so the full run reuses their cache), and both-order scoring with JudgeBench's rule.
+  Scoring reproduces JudgeBench's published results exactly (GPT-4o 50.9, DeepSeek-R1 73.1, o3-mini high 80.9).
+  55 tests pass. Varun merged PR #5 (proposal draft); its open points (pilot result line, cost wording, odd vote counts) are for Wednesday.
+  Labels lean to A (336 `A>B`, 284 `B>A`), one more reason to score in both orders.
 - **2026-11-16:** Adrian built the judge (`src/debate_judge/judge.py`, prompt in `src/debate_judge/prompts.py`, version `judge-v1`):
   one JudgeBench pair judged in both answer orders, JSON verdict, decisions returned in the pair's original labels,
   debate arguments relabeled for the swapped order. Offline tests only so far (53 pass in total); no real-API dry run yet.
@@ -43,15 +49,17 @@ Put the newest entries first in each section.
 - [x] Both: assign Role A and Role B, then record it in `docs/ROLES.md` in a pull request (merged in PR #1).
 - [x] Both: read `docs/research/question_selection.md` before the meeting.
 - [x] Both: choose the research question (question 6 on JudgeBench, Adrian to confirm in the PR).
-- [ ] Both: write the 1-page proposal (`report/proposal.md`), due 2026-11-23. Draft in PR #5, waiting for Varun's review.
+- [ ] Both: write the 1-page proposal (`report/proposal.md`), due 2026-11-23. Draft merged (PR #5); add the pilot result and fix the review points.
 - [ ] Both: settle the go/no-go pilot rule. The proposal draft (PR #5) suggests 200 pairs; continue only if the thinking judge is better
   with a paired 95% confidence interval above zero and fewer than 1 in 5 debaters concede.
 - [x] Evaluation lead (Varun): `chat()` helper with cache and call log (PR `varun/chat-helper`).
 - [x] Evaluation lead (Varun): confirm the model id (`deepseek-flash` is in the models list).
 - [x] Evaluation lead (Varun): add credit, then rerun `python scripts/check_model.py` to confirm the thinking switch (passed).
-- [ ] Evaluation lead (Varun): JudgeBench loader and both-order scoring (`data.py`), next.
+- [x] Evaluation lead (Varun): JudgeBench loader and both-order scoring (`data.py`, branch `varun/judgebench-loader`).
+- [ ] Evaluation lead (Varun): vote baseline, cost matching and `stats.py` (Wednesday).
+- [ ] Both: decide who tops up for the full runs; Varun's balance (US$9.99) covers the pilot only.
 - [x] Method lead (Adrian): judge prompt and `judge_pair()` (branch `adrian/judge`).
-- [ ] Method lead (Adrian): dry-run the judge on 10–20 pairs with the real API once the loader exists; those pairs are left out of reported results.
+- [ ] Method lead (Adrian): dry-run the judge with the real API on `dry_run_pairs()` (20 fixed pairs, never reported); the loader exists now.
 - [ ] Method lead (Adrian): debater prompt, one-round debate and one-sided argument (`debate.py`), next.
 
 ## For the report
@@ -87,6 +95,8 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-17 | Varun | `data.py` (loader, subsets, scoring) and 26 tests | Claude Code wrote them; checked the real dataset's counts, and scored three of JudgeBench's published judge output files with `score_pair`, matching Adrian's script and the published scores exactly; 55 tests pass |
+| 2026-11-17 | Varun | Reviewed PR #6 (judge) and PR #7 (schedule) | Claude Code ran PR #6's tests in a separate worktree (53 pass) and read the code; comments: pass `temperature` for votes, check JSON mode with thinking in the dry run |
 | 2026-11-16 | Adrian | Judge prompt, `judge_pair()` and 24 unit tests | Claude Code wrote them, adapting JudgeBench's vanilla judge prompt; tests use a fake `chat()` and the full suite passes (53); Adrian to review the diff in the PR |
 | 2026-11-16 | Adrian | Reviewed PR #4 (`chat()`) and merged it after the fixes | Claude Code read the code and found seven issues, posted as a review; after Varun's fixes it re-read the diff and checked the committed API log for keys |
 | 2026-11-16 | Varun | Fixed the seven points from Adrian's PR #4 review | Adrian's Claude Code found them by reading the code; Varun's Claude Code fixed them and added a test for each (29 tests pass); a good example of agent-assisted cross-review for the report |

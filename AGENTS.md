@@ -96,6 +96,22 @@ Every change is reviewed by the other member in a pull request before it is merg
 - For votes, call it with `sample=0..k-1`. Every call logs `prompt_version`; bump `JUDGE_PROMPT_VERSION` if the wording changes.
 - The prompts are frozen with a git tag before the pilot. Don't tune them on pilot pairs.
 
+## Using the JudgeBench data (built)
+
+`src/debate_judge/data.py`; read its docstring.
+
+- `load_judgebench()` returns all 620 pairs as dicts, pinned to one dataset revision. It adds `split` (gpt or claude),
+  `category` (knowledge, reasoning, math, coding) and `group` (knowledge or rmc). Downloading it is free.
+- **Fixed subsets; always use these, never pick pairs by hand:**
+  - `dry_run_pairs(pairs)`: 20 pairs for prompt dry runs. Never in reported results.
+  - `pilot_pairs(pairs)`: 200 pairs for the go/no-go pilot. They are part of the reported set, so the full run reuses their cached calls.
+  - `report_pairs(pairs)`: the 600 pairs all reported results use.
+  All keep the category mix of the full set.
+- `score_pair(label, verdict.decisions)` applies JudgeBench's rule. The decisions are in original labels, as `judge.py` returns them; do not flip.
+  Outcomes: `both_right`, `both_wrong`, `split` (same shown position both times; `first_slot` says which), `partial_right`, `partial_wrong`, `no_verdict`.
+- `majority(decisions)` combines votes for one order (ties give `None`); `summarize(...)` gives accuracy by category and group.
+- Scoring was checked against JudgeBench's published outputs: GPT-4o 50.9, DeepSeek-R1 73.1 and o3-mini (high) 80.9, matching exactly.
+
 ## Planned layout
 
 Update this section whenever the layout changes.
@@ -105,7 +121,7 @@ pyproject.toml    package metadata and pytest settings
 tests/            unit tests; no API calls
 src/debate_judge/
   llm.py          chat() helper, cache, call log  [built]   (evaluation lead)
-  data.py         dataset loaders, answer extraction, scoring (evaluation lead)
+  data.py         JudgeBench loader, fixed subsets, both-order scoring [built] (evaluation lead)
   baselines.py    chain-of-thought, self-consistency        (evaluation lead)
   stats.py        confidence intervals, paired tests        (evaluation lead)
   prompts.py      judge (and later debater) prompt templates [judge built] (method lead)
