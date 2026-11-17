@@ -6,6 +6,11 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-17:** Varun built `src/debate_judge/stats.py`: Wilson 95% intervals for accuracy, Newcombe's paired interval for
+  the difference between two conditions on the same pairs, McNemar's exact test, a seeded paired bootstrap as a cross-check,
+  and per-group versions for H3. The go/no-go rule is `paired_comparison(weak, thinking).b_better`.
+  Checked against SciPy (Wilson, McNemar), the research report's interval widths, the bootstrap, and a coverage simulation (about 95%).
+  Branch `varun/stats`, built on PR #8. Adrian's PR #9 (schedule in UTC+8) approved; his commits show his time zone is set to UTC+3.
 - **2026-11-17:** Varun built `src/debate_judge/data.py`: JudgeBench loader pinned to revision `57dd5e0` (620 pairs: 350 gpt, 270 claude;
   308 knowledge, 149 reasoning, 90 math, 73 coding), fixed stratified subsets (20 dry-run pairs, never reported; 200 pilot pairs,
   inside the 600 reported pairs so the full run reuses their cache), and both-order scoring with JudgeBench's rule.
@@ -56,7 +61,8 @@ Put the newest entries first in each section.
 - [x] Evaluation lead (Varun): confirm the model id (`deepseek-flash` is in the models list).
 - [x] Evaluation lead (Varun): add credit, then rerun `python scripts/check_model.py` to confirm the thinking switch (passed).
 - [x] Evaluation lead (Varun): JudgeBench loader and both-order scoring (`data.py`, branch `varun/judgebench-loader`).
-- [ ] Evaluation lead (Varun): vote baseline, cost matching and `stats.py` (Wednesday).
+- [x] Evaluation lead (Varun): `stats.py` (branch `varun/stats`).
+- [ ] Evaluation lead (Varun): vote baseline and cost matching (Wednesday, after the pilot's costs are known).
 - [ ] Both: decide who tops up for the full runs; Varun's balance (US$9.99) covers the pilot only.
 - [x] Method lead (Adrian): judge prompt and `judge_pair()` (branch `adrian/judge`).
 - [ ] Method lead (Adrian): dry-run the judge with the real API on `dry_run_pairs()` (20 fixed pairs, never reported); the loader exists now.
@@ -95,6 +101,7 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-17 | Varun | `stats.py` (intervals, paired tests) and 23 tests | Claude Code wrote them; Wilson and McNemar checked against SciPy, interval widths against the research report, Newcombe against a 20,000-resample bootstrap and a 1,500-trial coverage simulation (about 95%); caught and fixed one deviation from Newcombe's formula while re-reading the paper's adjustment rule |
 | 2026-11-17 | Varun | `data.py` (loader, subsets, scoring) and 26 tests | Claude Code wrote them; checked the real dataset's counts, and scored three of JudgeBench's published judge output files with `score_pair`, matching Adrian's script and the published scores exactly; 55 tests pass |
 | 2026-11-17 | Varun | Reviewed PR #6 (judge) and PR #7 (schedule) | Claude Code ran PR #6's tests in a separate worktree (53 pass) and read the code; comments: pass `temperature` for votes, check JSON mode with thinking in the dry run |
 | 2026-11-16 | Adrian | Judge prompt, `judge_pair()` and 24 unit tests | Claude Code wrote them, adapting JudgeBench's vanilla judge prompt; tests use a fake `chat()` and the full suite passes (53); Adrian to review the diff in the PR |

@@ -112,6 +112,17 @@ Every change is reviewed by the other member in a pull request before it is merg
 - `majority(decisions)` combines votes for one order (ties give `None`); `summarize(...)` gives accuracy by category and group.
 - Scoring was checked against JudgeBench's published outputs: GPT-4o 50.9, DeepSeek-R1 73.1 and o3-mini (high) 80.9, matching exactly.
 
+## Using the statistics (built)
+
+`src/debate_judge/stats.py`; read its docstring. Inputs are `{pair_id: correct}` dicts, from `score_pair(...).correct`.
+
+- `accuracy_ci(correct)`: accuracy with a 95% Wilson interval. Use it for every number in the results table.
+- `paired_comparison(a, b)`: B minus A on the pairs both conditions scored, with Newcombe's 95% paired interval
+  and McNemar's exact p-value. Always compare conditions this way, never by overlapping the two separate intervals.
+- **Go/no-go rule:** `paired_comparison(weak_judge, thinking_judge).b_better` (the interval is above zero).
+- `by_group(...)` and `paired_by_group(...)` split by `group` (knowledge or rmc) or `category`, for hypothesis H3.
+- `paired_bootstrap_interval(a, b)` is a seeded cross-check; it agrees with Newcombe within about 2 points.
+
 ## Planned layout
 
 Update this section whenever the layout changes.
@@ -123,7 +134,7 @@ src/debate_judge/
   llm.py          chat() helper, cache, call log  [built]   (evaluation lead)
   data.py         JudgeBench loader, fixed subsets, both-order scoring [built] (evaluation lead)
   baselines.py    chain-of-thought, self-consistency        (evaluation lead)
-  stats.py        confidence intervals, paired tests        (evaluation lead)
+  stats.py        Wilson intervals, Newcombe paired interval, McNemar test [built] (evaluation lead)
   prompts.py      judge (and later debater) prompt templates [judge built] (method lead)
   debate.py       debaters: one-round debate, one-sided argument (method lead)
   judge.py        pairwise judge in both answer orders [built] (method lead)
