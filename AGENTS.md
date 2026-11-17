@@ -82,6 +82,22 @@ Every change is reviewed by the other member in a pull request before it is merg
   `cost_usd` is the real spend (peak or off-peak, cache discount, 0 for our own cache hits); the budget ledger uses it.
 - Tests use a fake client and cost nothing: `python -m pytest`. `python scripts/check_model.py` checks the real API for under US$0.01.
 
+## Using the debaters (built)
+
+`src/debate_judge/debate.py` and the debater prompt in `src/debate_judge/prompts.py`; read their docstrings.
+
+- **One round:** `debate_arguments(pair, thinking="low"|"high", run=...)` makes one call per side; each debater defends
+  its assigned response and critiques the other, without seeing the other debater's argument. Pass
+  `arguments_for_judge(args)` to `judge_pair()`; incomplete arguments are left out.
+- **One-sided:** `one_sided_arguments(pair, debate_args_high)` reuses one of the two `high` debate arguments (no extra
+  debater call). The side is fixed per pair by a seeded hash and is the correct response about half the time.
+- Debaters say "my response" and "the other response", never "Response A/B", so one argument fits both answer orders.
+  Any slip is rewritten and counted in `Argument.letter_fixes`.
+- A cut-off or blank argument is retried once with twice the token cap; both attempts' costs count toward the condition.
+- **Concessions:** `check_concession(argument, run=...)` is a thinking-off check ("defends", "concedes" or "unclear").
+  It is analysis, not part of any condition, so it is left out of cost matching. In the pilot, compare it with hand labels.
+- Every call logs `prompt_version` (`debater-v1`, `concession-v1`). Frozen with the judge prompt before the pilot.
+
 ## Using the judge (built)
 
 `src/debate_judge/judge.py` and `src/debate_judge/prompts.py`; read their docstrings.
@@ -93,7 +109,8 @@ Every change is reviewed by the other member in a pull request before it is merg
   A decision is `None` when the reply was incomplete or could not be parsed.
 - Debate arguments go in as `arguments={"A": ..., "B": ...}` in original labels; one entry means a one-sided argument.
   They are relabeled for the swapped order, so each argument is generated once and reused for both orders.
-- For votes, call it with `sample=0..k-1`. Every call logs `prompt_version`; bump `JUDGE_PROMPT_VERSION` if the wording changes.
+- For votes, call it with `sample=0..k-1` and an explicit `temperature`, so it is logged.
+  Every call logs `prompt_version`; bump `JUDGE_PROMPT_VERSION` if the wording changes.
 - The prompts are frozen with a git tag before the pilot. Don't tune them on pilot pairs.
 
 ## Planned layout
@@ -108,8 +125,8 @@ src/debate_judge/
   data.py         dataset loaders, answer extraction, scoring (evaluation lead)
   baselines.py    chain-of-thought, self-consistency        (evaluation lead)
   stats.py        confidence intervals, paired tests        (evaluation lead)
-  prompts.py      judge (and later debater) prompt templates [judge built] (method lead)
-  debate.py       debaters: one-round debate, one-sided argument (method lead)
+  prompts.py      judge, debater and concession-check prompts [built] (method lead)
+  debate.py       debaters: one-round debate, one-sided argument, concession check [built] (method lead)
   judge.py        pairwise judge in both answer orders [built] (method lead)
   methods/        our new method                            (method lead)
 scripts/          check_model.py [built]; run_baseline.sh, run_method.sh, make_table.py

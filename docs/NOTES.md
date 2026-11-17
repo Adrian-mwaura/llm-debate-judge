@@ -57,11 +57,21 @@ Put the newest entries first in each section.
 ## For the report
 
 - **Limitations:** JudgeBench has been public since 2024, so `deepseek-flash` may have seen its questions and responses in training.
+- **Limitations:** the 200 pilot pairs decide go/no-go and are also part of the 600 reported pairs (to save money).
+  Say so, and also report results on the 400 non-pilot pairs as a check; that is a slice of the same run and costs nothing.
+- **Method:** the judge is told in every condition that exactly one response is correct (true of every JudgeBench pair). Varun's PR #6 review.
+- **Method:** one round only. Debaters do not see or rebut each other's arguments; the second round was dropped for time.
+- **Method:** the one-sided condition reuses one of the two `high` debate arguments, so it differs from the debate only in
+  whether the judge sees the second argument.
 
 ## Decisions
 
 | Date | Decision | Why | Who |
 |---|---|---|---|
+| 2026-11-17 | Debater prompt `debater-v1`: one call per side, defend and critique, at most 250 words, "my response"/"the other response" instead of letters | One argument then fits both answer orders; letters can't be swapped safely because MMLU-Pro answers use option letters | Adrian |
+| 2026-11-17 | One-sided condition reuses one `high` debate argument, the correct side about half the time | No extra debater calls (saves about US$1.75), and a cleaner comparison with the debate | Adrian |
+| 2026-11-17 | Concessions: pilot runs debaters at `low` and `high` on 30 pilot pairs, both sides (120 calls, about US$0.20); Adrian reads the 30 wrong-side arguments per effort by hand; the full run uses a thinking-off check, validated against those labels | The go/no-go needs a reliable concession count; the same calls give the measured debater costs Varun needs to set k | Adrian |
+| 2026-11-17 | Keep 600 reported pairs with the 200 pilot pairs inside them; report the 400 non-pilot pairs as a check | Avoids paying for extra pairs; the check is free | Adrian |
 | 2026-11-17 | Finish everything by Friday 20 November, following `docs/SCHEDULE.md`; drop the two-round debate, and run max effort only if time and budget allow | Leaves Saturday to Monday as buffer before the 23 November deadline | Adrian; Varun to agree in the PR |
 | 2026-11-16 | Match costs on `cost_match_usd`: off-peak list price with no cache discount | Peak hours and caching would otherwise make the same compute look cheaper or dearer depending on when and in what order we ran it | Varun |
 | 2026-11-16 | Research question: question 6 (weak judge, two debaters), run on JudgeBench; question 8 is the fallback | Most novel option; the JudgeBench redesign gives a real strength gap and simpler protocols; a fair null result is acceptable under the brief; code is shared with question 8 | Varun, matching Adrian's lean; Adrian to confirm |
