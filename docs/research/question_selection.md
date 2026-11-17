@@ -37,7 +37,7 @@ All of these are checked against primary sources (listed at the end).
 
 - `deepseek-flash` is DeepSeek-V4.1-Flash-1017. It is the name to use in the API.
 - **Price per million tokens:** input US$0.15 off-peak and US$0.30 at peak; output US$0.60 off-peak and US$1.20 at peak; cached input US$0.003 off-peak.
-- **Peak hours are 01:00–04:00 and 06:00–10:00 UTC, Monday to Friday** (04:00–07:00 and 09:00–13:00 in UTC+3). Everything else, including weekends, is off-peak at half price. Running off-peak doubles our budget.
+- **Peak hours are 01:00–04:00 and 06:00–10:00 UTC, Monday to Friday** (09:00–12:00 and 14:00–18:00 in UTC+8). Everything else, including weekends, is off-peak at half price. Running off-peak doubles our budget.
 - **Thinking is on by default**, at effort `high`. Thinking tokens are billed as output. Switch it with `extra_body={"thinking": {"type": "disabled"}}`, or set `reasoning_effort` to `none`, `low`, `high` or `max`. Our `chat()` helper must set this on every call, or every call silently pays for thinking.
 - **`temperature` has no effect in thinking mode.** We cannot tune how different the samples are when thinking is on.
 - **How much thinking helps depends on the task.** On the official V4-Flash model card, going from no thinking to effort `high` adds 3.4 points on MMLU-Pro, but 16.2 on GPQA Diamond, 21.3 on Humanity's Last Exam and 33.2 on LiveCodeBench.
