@@ -51,6 +51,7 @@ Put the newest entries first in each section.
 
 | Date | Decision | Why | Who |
 |---|---|---|---|
+| 2026-11-17 | Finish everything by Friday 20 November, following `docs/SCHEDULE.md`; drop the two-round debate, and run max effort only if time and budget allow | Leaves Saturday to Monday as buffer before the 23 November deadline | Adrian; Varun to agree in the PR |
 | 2026-11-16 | Match costs on `cost_match_usd`: off-peak list price with no cache discount | Peak hours and caching would otherwise make the same compute look cheaper or dearer depending on when and in what order we ran it | Varun |
 | 2026-11-16 | Research question: question 6 (weak judge, two debaters), run on JudgeBench; question 8 is the fallback | Most novel option; the JudgeBench redesign gives a real strength gap and simpler protocols; a fair null result is acceptable under the brief; code is shared with question 8 | Varun, matching Adrian's lean; Adrian to confirm |
 | 2026-11-16 | Varun is Role B (evaluation lead), Adrian is Role A (method lead) | Varun chose Role B; final once Adrian approves the PR | Varun |
