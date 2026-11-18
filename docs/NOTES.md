@@ -6,6 +6,19 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-18:** Varun built the pilot runner (`scripts/run_pilot.py`, logic in `src/debate_judge/pilot.py`) and ran the
+  **real dry run on the 20 dry-run pairs** (US$0.15, off-peak). Everything works: 0 incomplete replies, 0 unparsed verdicts,
+  0 incomplete debater arguments, 0 "Response A/B" rewrites, 0 automatic concessions. Varun read two wrong-side `high`
+  arguments: both defend the wrong answer firmly with checkable specifics. `high` debaters used about 2,800 reasoning tokens.
+  Dry-run accuracy (n=20, too small to decide anything): weak judge 60.0, thinking `low` 70.0, `high` 70.0.
+  Measured cost per pair (both orders, incl. debater arguments, `cost_match_usd`): weak judge 0.00054, thinking low 0.00195,
+  high 0.00298, debate low 0.00330, debate high 0.00475, one-sided 0.00262. Next: freeze prompts, run the 200-pair pilot.
+  The project is about a day behind `docs/SCHEDULE.md`: the go/no-go due Wednesday midday moves to Wednesday night.
+- **2026-11-17:** Varun built `src/debate_judge/stats.py`: Wilson 95% intervals for accuracy, Newcombe's paired interval for
+  the difference between two conditions on the same pairs, McNemar's exact test, a seeded paired bootstrap as a cross-check,
+  and per-group versions for H3. The go/no-go rule is `paired_comparison(weak, thinking).b_better`.
+  Checked against SciPy (Wilson, McNemar), the research report's interval widths, the bootstrap, and a coverage simulation (about 95%).
+  Branch `varun/stats`, built on PR #8. Adrian's PR #9 (schedule in UTC+8) approved; his commits show his time zone is set to UTC+3.
 - **2026-11-17:** Varun built `src/debate_judge/data.py`: JudgeBench loader pinned to revision `57dd5e0` (620 pairs: 350 gpt, 270 claude;
   308 knowledge, 149 reasoning, 90 math, 73 coding), fixed stratified subsets (20 dry-run pairs, never reported; 200 pilot pairs,
   inside the 600 reported pairs so the full run reuses their cache), and both-order scoring with JudgeBench's rule.
@@ -56,11 +69,16 @@ Put the newest entries first in each section.
 - [x] Evaluation lead (Varun): confirm the model id (`deepseek-flash` is in the models list).
 - [x] Evaluation lead (Varun): add credit, then rerun `python scripts/check_model.py` to confirm the thinking switch (passed).
 - [x] Evaluation lead (Varun): JudgeBench loader and both-order scoring (`data.py`, branch `varun/judgebench-loader`).
-- [ ] Evaluation lead (Varun): vote baseline, cost matching and `stats.py` (Wednesday).
-- [ ] Both: decide who tops up for the full runs; Varun's balance (US$9.99) covers the pilot only.
+- [x] Evaluation lead (Varun): `stats.py` (branch `varun/stats`).
+- [x] Evaluation lead (Varun): pilot runner and the real dry run (branch `varun/pilot-runner`).
+- [ ] Both: freeze the prompts (`git tag prompts-v1 && git push origin prompts-v1`) once #11 and the runner PR are merged.
+- [ ] Varun: run the 200-pair pilot off-peak (`python scripts/run_pilot.py pilot`, about US$1.50–2).
+- [ ] Adrian: fill `hand_label` for the 60 wrong-side rows in `results/pilot/concession_review.csv`; then both decide go/no-go.
+- [ ] Evaluation lead (Varun): vote baseline and cost matching (after the pilot's costs are known).
+- [ ] Both: decide who tops up for the full runs; Varun's balance (about US$9.84) covers the pilot only.
 - [x] Method lead (Adrian): judge prompt and `judge_pair()` (branch `adrian/judge`).
-- [ ] Method lead (Adrian): dry-run the judge with the real API on `dry_run_pairs()` (20 fixed pairs, never reported); the loader exists now.
-- [ ] Method lead (Adrian): debater prompt, one-round debate and one-sided argument (`debate.py`), next.
+- [x] Dry-run the judge and debaters with the real API on `dry_run_pairs()` (done by Varun with the runner, 2026-11-18).
+- [x] Method lead (Adrian): debater prompt, one-round debate and one-sided argument (`debate.py`, PR #10).
 
 ## For the report
 
@@ -91,6 +109,7 @@ Put the newest entries first in each section.
 
 | Date | Who | Run | Dataset and number of questions | Cost (US$) | Total so far (US$) |
 |---|---|---|---|---|---|
+| 2026-11-18 | Varun | `run_pilot.py dry` (prompt dry run, off-peak, commit adf143e) | JudgeBench dry-run pairs, 20 (debaters on 5) | 0.1485 | 0.1487 |
 | 2026-11-16 | Varun | `check_model` (setup check, 6 tiny calls, all thinking levels, peak hours) | none; one arithmetic question | 0.0002 | 0.0002 |
 
 Account balances: Varun US$10.00 topped up (2026-11-16).
@@ -99,12 +118,19 @@ Account balances: Varun US$10.00 topped up (2026-11-16).
 
 <!-- One entry per run: date, who, git commit, settings, accuracy, cost, notes. -->
 
+- **2026-11-18, Varun, dry run, commit adf143e (prompts judge-v1, debater-v1, concession-v1).** 20 dry-run pairs; weak judge
+  thinking off, temperature 1.0, max_tokens 1000; thinking judge `low` (16000) and `high` (32000); debaters `low` and `high` on 5 pairs,
+  both sides. Accuracy (not reported; n too small): weak 60.0, low 70.0, high 70.0; debate low 4/5, debate high 5/5, one-sided 5/5.
+  No incomplete or unparsed calls. Spend US$0.1485. Outputs: `results/dry/`, logs `logs/calls/dry_*.jsonl`.
+
 ## Collaboration log
 
 Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-18 | Varun | Pilot runner (`pilot.py`, `run_pilot.py`), 10 tests, real dry run | Claude Code wrote them; an end-to-end test with a fake API caught one bug (wrong argument passed to `one_sided_arguments`) before any money was spent; then the real 20-pair dry run, with two wrong-side arguments read by hand |
+| 2026-11-17 | Varun | `stats.py` (intervals, paired tests) and 23 tests | Claude Code wrote them; Wilson and McNemar checked against SciPy, interval widths against the research report, Newcombe against a 20,000-resample bootstrap and a 1,500-trial coverage simulation (about 95%); caught and fixed one deviation from Newcombe's formula while re-reading the paper's adjustment rule |
 | 2026-11-17 | Varun | `data.py` (loader, subsets, scoring) and 26 tests | Claude Code wrote them; checked the real dataset's counts, and scored three of JudgeBench's published judge output files with `score_pair`, matching Adrian's script and the published scores exactly; 55 tests pass |
 | 2026-11-17 | Varun | Reviewed PR #6 (judge) and PR #7 (schedule) | Claude Code ran PR #6's tests in a separate worktree (53 pass) and read the code; comments: pass `temperature` for votes, check JSON mode with thinking in the dry run |
 | 2026-11-16 | Adrian | Judge prompt, `judge_pair()` and 24 unit tests | Claude Code wrote them, adapting JudgeBench's vanilla judge prompt; tests use a fake `chat()` and the full suite passes (53); Adrian to review the diff in the PR |

@@ -129,6 +129,34 @@ Every change is reviewed by the other member in a pull request before it is merg
 - `majority(decisions)` combines votes for one order (ties give `None`); `summarize(...)` gives accuracy by category and group.
 - Scoring was checked against JudgeBench's published outputs: GPT-4o 50.9, DeepSeek-R1 73.1 and o3-mini (high) 80.9, matching exactly.
 
+## Using the statistics (built)
+
+`src/debate_judge/stats.py`; read its docstring. Inputs are `{pair_id: correct}` dicts, from `score_pair(...).correct`.
+
+- `accuracy_ci(correct)`: accuracy with a 95% Wilson interval. Use it for every number in the results table.
+- `paired_comparison(a, b)`: B minus A on the pairs both conditions scored, with Newcombe's 95% paired interval
+  and McNemar's exact p-value. Always compare conditions this way, never by overlapping the two separate intervals.
+- **Go/no-go rule:** `paired_comparison(weak_judge, thinking_judge).b_better` (the interval is above zero).
+- `by_group(...)` and `paired_by_group(...)` split by `group` (knowledge or rmc) or `category`, for hypothesis H3.
+- `paired_bootstrap_interval(a, b)` is a seeded cross-check; it agrees with Newcombe within about 2 points.
+
+## Running the dry run and the pilot (built)
+
+`scripts/run_pilot.py` with the logic in `src/debate_judge/pilot.py`; read their docstrings.
+
+- `python scripts/run_pilot.py dry`: the 20 `dry_run_pairs`, every kind of call once (about US$0.20). Never reported.
+- `python scripts/run_pilot.py pilot`: the 200 `pilot_pairs`. Weak judge, thinking judge at `low` and `high`;
+  debaters at `low` and `high` on the first 30 pilot pairs (both sides), the weak judge reading those debates and the
+  one-sided argument, and the automatic concession check. About US$1.50–2.
+- It refuses to run at peak price (`--allow-peak` overrides), and refuses the pilot unless the prompts are committed and the
+  commit is tagged (freeze: `git tag prompts-v1 && git push origin prompts-v1`; `--allow-unfrozen` overrides).
+- Outputs: `results/<stage>/summary.json` (accuracy with intervals, paired comparisons, outcomes, incomplete and unparsed
+  counts, cost per pair including debater arguments, suggested votes k per order, go/no-go) and
+  `results/<stage>/concession_review.csv` (every argument with the automatic verdict and an empty `hand_label` column).
+- **The weak judge always runs at `pilot.WEAK_JUDGE_TEMPERATURE` (1.0)**, alone, with debates and in the vote baseline,
+  so the judge-alone call is vote sample 0 and is paid once.
+- Go/no-go is printed as `decision_auto`; Adrian confirms the concession rate by filling `hand_label` before we decide.
+
 ## Planned layout
 
 Update this section whenever the layout changes.
@@ -140,12 +168,13 @@ src/debate_judge/
   llm.py          chat() helper, cache, call log  [built]   (evaluation lead)
   data.py         JudgeBench loader, fixed subsets, both-order scoring [built] (evaluation lead)
   baselines.py    chain-of-thought, self-consistency        (evaluation lead)
-  stats.py        confidence intervals, paired tests        (evaluation lead)
+  stats.py        Wilson intervals, Newcombe paired interval, McNemar test [built] (evaluation lead)
   prompts.py      judge, debater and concession-check prompts [built] (method lead)
   debate.py       debaters: one-round debate, one-sided argument, concession check [built] (method lead)
   judge.py        pairwise judge in both answer orders [built] (method lead)
   methods/        our new method                            (method lead)
-scripts/          check_model.py [built]; run_baseline.sh, run_method.sh, make_table.py
+  pilot.py        dry run and go/no-go pilot logic [built] (evaluation lead)
+scripts/          check_model.py, run_pilot.py [built]; run_baseline.sh, run_method.sh, make_table.py
 logs/             calls/<run>.jsonl call logs and cache/<xx>/<hash>.json (committed)
 results/          tables and plots (committed)
 report/           proposal and report drafts
