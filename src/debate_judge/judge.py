@@ -82,11 +82,11 @@ def _normalise_winner(value: Any) -> str | None:
     return w if w in ("A", "B") else None
 
 
-def parse_verdict(text: str) -> tuple[str | None, str]:
-    """Return (winner, reasoning) from the judge's reply; winner is "A", "B" or None.
+def extract_json(text: str) -> dict | None:
+    """The JSON object in a model reply, or None.
 
-    Tries strict JSON first, then the first {...} block (for replies wrapped in prose or code
-    fences), then a "winner": "X" pattern as a last resort.
+    Tries the whole reply first (after removing code fences), then the first {...} block,
+    for replies wrapped in prose.
     """
     cleaned = _FENCE.sub("", text or "").strip()
     candidates = [cleaned]
@@ -99,8 +99,19 @@ def parse_verdict(text: str) -> tuple[str | None, str]:
         except ValueError:
             continue
         if isinstance(obj, dict):
-            return _normalise_winner(obj.get("winner")), str(obj.get("reasoning", "")).strip()
-    m = _WINNER_RE.search(cleaned)
+            return obj
+    return None
+
+
+def parse_verdict(text: str) -> tuple[str | None, str]:
+    """Return (winner, reasoning) from the judge's reply; winner is "A", "B" or None.
+
+    Uses extract_json(), then a "winner": "X" pattern as a last resort for broken JSON.
+    """
+    obj = extract_json(text)
+    if obj is not None:
+        return _normalise_winner(obj.get("winner")), str(obj.get("reasoning", "")).strip()
+    m = _WINNER_RE.search(_FENCE.sub("", text or ""))
     return (m.group(1).upper() if m else None), ""
 
 
@@ -132,18 +143,21 @@ def judge_pair(
     condition: str,
     arguments: Mapping[str, str] | None = None,
     sample: int = 0,
+    temperature: float | None = None,
     max_tokens: int | None = None,
     json_mode: bool = True,
     chat_fn: Callable[..., Any] | None = None,
 ) -> PairVerdict:
     """Judge one pair in both answer orders and return both verdicts.
 
-    thinking:  "none" for the weak judge; "low", "high" or "max" for the thinking judge.
-    run:       log file name for chat(), one per condition, e.g. "pilot_judge_none".
-    condition: recorded in each call's meta, e.g. "judge_alone", "one_sided", "debate_high".
-    arguments: debater arguments in ORIGINAL labels, {"A": ..., "B": ...}; one entry = one-sided.
-    sample:    vote index (0..k-1) for the vote baseline; part of chat()'s cache key.
-    chat_fn:   defaults to debate_judge.llm.chat; tests pass a fake.
+    thinking:    "none" for the weak judge; "low", "high" or "max" for the thinking judge.
+    run:         log file name for chat(), one per condition, e.g. "pilot_judge_none".
+    condition:   recorded in each call's meta, e.g. "judge_alone", "one_sided", "debate_high".
+    arguments:   debater arguments in ORIGINAL labels, {"A": ..., "B": ...}; one entry = one-sided.
+    sample:      vote index (0..k-1) for the vote baseline; part of chat()'s cache key.
+    temperature: set it explicitly for the vote baseline so it is logged; chat() only sends it
+                 with thinking="none" (the API ignores it in thinking mode).
+    chat_fn:     defaults to debate_judge.llm.chat; tests pass a fake.
     """
     if chat_fn is None:
         from debate_judge.llm import chat as chat_fn  # imported here so tests need no API setup
@@ -162,6 +176,7 @@ def judge_pair(
             run=run,
             json_mode=json_mode,
             sample=sample,
+            temperature=temperature,
             meta={
                 "role": "judge",
                 "pair_id": pair.get("pair_id"),

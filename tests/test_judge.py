@@ -159,8 +159,15 @@ def test_settings_and_meta_are_passed_to_chat():
     assert c["run"] == "pilot_judge_high"
     assert c["sample"] == 3
     assert c["json_mode"] is True
+    assert c["temperature"] is None
     assert c["meta"] == {"role": "judge", "pair_id": "p1", "order": "AB", "condition": "thinking_judge",
                          "n_arguments": 0, "prompt_version": JUDGE_PROMPT_VERSION}
+
+
+def test_temperature_is_passed_to_chat_for_votes():
+    fake = FakeChat(picks_right)
+    J.judge_pair(PAIR, thinking="none", run="t", condition="votes", sample=1, temperature=1.0, chat_fn=fake)
+    assert [c["temperature"] for c in fake.calls] == [1.0, 1.0]
 
 
 def test_costs_are_summed_over_both_orders():
