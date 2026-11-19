@@ -6,6 +6,13 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-19:** Varun made the fixes from Adrian's post-merge reviews of PR #11 and PR #12 (Adrian asked for #12's before the pilot;
+  they landed just after it, and none of them changes a pilot number). SciPy-only tests skip without SciPy, the rest run.
+  The freeze check now needs tag `prompts-v1` and `prompts.py`, `judge.py`, `debate.py` identical to it with no uncommitted
+  changes, so later commits to other files no longer block runs. `python scripts/run_pilot.py decide` reads the hand labels and writes
+  `go_no_go_final`. Votes are capped at 15 per order with conditions over the cap flagged. Incomplete arguments leave the concession
+  denominator. Checked on the pilot without API calls: concessions still 0/30 and 0/30 (no incomplete arguments), largest k 9,
+  and the pilot ran on `5509a74` = the tag, so it passes the stricter check (recorded as `freeze_check_post_hoc`). 166 tests pass.
 - **2026-11-19:** **Pilot done: automatic decision GO (question 6)**, pending Adrian's hand labels of the 60 wrong-side arguments.
   Prompts frozen as tag `prompts-v1` on `5509a74`; pilot run 13:01–13:24 UTC+8, off-peak (it was set for 12:00, but the PC slept), US$1.40.
   On the 200 pilot pairs: weak judge (thinking off) 71.0 [64.4, 76.8]; thinking `low` 89.0 [83.9, 92.6]; thinking `high` 89.5 [84.5, 93.0].
@@ -97,8 +104,10 @@ Put the newest entries first in each section.
 - [x] Evaluation lead (Varun): pilot runner and the real dry run (branch `varun/pilot-runner`).
 - [x] Both: freeze the prompts (tag `prompts-v1` on `5509a74`, pushed 2026-11-19).
 - [x] Varun: run the 200-pair pilot off-peak (2026-11-19, US$1.40; automatic decision GO).
-- [ ] Adrian: fill `hand_label` for the 60 wrong-side rows (`assigned_correct` = False) in `results/pilot/concession_review.csv`;
-  then both confirm go/no-go and record it in the decisions table.
+- [x] Varun: fixes from Adrian's post-merge reviews of PR #11 (SciPy-only skip) and PR #12 (strict freeze check, `decide` step,
+  vote cap 15, concession denominator), branch `varun/pilot-results`.
+- [ ] Adrian: fill `hand_label` (`defends`, `concedes` or `unclear`) for the 60 wrong-side rows (`assigned_correct` = False) in
+  `results/pilot/concession_review.csv`; then run `python scripts/run_pilot.py decide` (free), commit, and both record the decision.
 - [ ] Evaluation lead (Varun): vote baseline and the full-run script with cost matching (pilot costs are in `results/pilot/summary.json`).
 - [ ] Both: top up before the full runs. Balance US$8.50; the full runs on the 600 report pairs are estimated at about US$10.20 at
   list price from the pilot's costs (debates 4.81, votes up to 9 per order 2.69, thinking judge 2.11, one-sided 0.37, weak 0.22),
@@ -110,6 +119,9 @@ Put the newest entries first in each section.
 
 ## For the report
 
+- **Primary test (Adrian's PR #11 review):** H1, the weak judge after a debate against the weak judge with votes at the same cost,
+  on the 600 report pairs, is the one primary test. Every other comparison (by group, by category, against the thinking judge,
+  one-sided, debater effort) is exploratory, with no correction for multiple comparisons; say so in Method and Limitations.
 - **Limitations:** JudgeBench has been public since 2024, so `deepseek-flash` may have seen its questions and responses in training.
 - **Limitations:** the 200 pilot pairs decide go/no-go and are also part of the 600 reported pairs (to save money).
   Say so, and also report results on the 400 non-pilot pairs as a check; that is a slice of the same run and costs nothing.
@@ -168,6 +180,7 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-19 | Varun | Fixed Adrian's PR #11 and #12 review points; 22 new tests | Claude Code made the fixes; freeze-check tests run against a throwaway git repo; the SciPy fix was checked by running the suite with SciPy made unimportable (11 SciPy tests skip, 155 run); the new rules were applied to the committed pilot files without API calls and changed no number. What went wrong: #11 and #12 were merged before Adrian reviewed them, and the pilot ran before his #12 fixes; from now on PRs wait for review |
 | 2026-11-19 | Varun | Reviewed and merged PR #13; tagged the prompts; ran the pilot | Claude Code ran the full suite on main + #13 (144 pass, real-data tests included), then scheduled the tag and pilot for the off-peak window; checked the logs for the API key before committing (none; one "Risk-free" false positive) |
 | 2026-11-19 | Adrian | Fixes from the PR #8 review (`data.py`) and 6 new tests | Claude Code made them; it checked on synthetic data that the dry-run pairs and the 600 reported pairs are unchanged and only the pilot changes; real-data tests compare the dry-run pairs with the committed dry-run logs (run once `datasets` is installed) |
 | 2026-11-18 | Varun | Pilot runner (`pilot.py`, `run_pilot.py`), 10 tests, real dry run | Claude Code wrote them; an end-to-end test with a fake API caught one bug (wrong argument passed to `one_sided_arguments`) before any money was spent; then the real 20-pair dry run, with two wrong-side arguments read by hand |

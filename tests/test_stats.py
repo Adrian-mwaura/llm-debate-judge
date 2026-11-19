@@ -2,9 +2,15 @@
 import random
 
 import pytest
-from scipy.stats import binomtest
 
 from debate_judge import stats
+
+
+def binomtest(*args, **kwargs):
+    """SciPy's binomtest, imported only by the tests that compare against it. Without SciPy those
+    tests skip, and every other test in the repo still runs (Adrian's PR #11 review)."""
+    scipy_stats = pytest.importorskip("scipy.stats", reason="SciPy not installed (pip install -r requirements.txt)")
+    return scipy_stats.binomtest(*args, **kwargs)
 
 
 # ---------------------------------------------------------------- Wilson
@@ -95,6 +101,7 @@ def test_clear_improvement_is_detected():
 
 
 def test_newcombe_agrees_with_bootstrap():
+    pytest.importorskip("numpy", reason="NumPy not installed (pip install -r requirements.txt)")
     for seed in range(5):
         a, b = make(200, 0.6, 0.7, 0.7, seed=seed)
         d = stats.paired_comparison(a, b)

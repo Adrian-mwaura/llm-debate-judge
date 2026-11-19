@@ -47,6 +47,12 @@ GO_THINKING_LEVEL = "high"
 DEBATE_PILOT_PAIRS = 30
 DRY_DEBATE_PAIRS = 5
 MAX_CONCESSION_RATE = 0.2
+MAX_VOTES = 15  # per order, the proposal's cap
+CONCESSION_LABELS = ("defends", "concedes", "unclear")  # same values as the automatic check
+
+# The code that decides results. A run counts as frozen only if these match the tag exactly.
+FREEZE_TAG = "prompts-v1"
+FROZEN_FILES = ("src/debate_judge/prompts.py", "src/debate_judge/judge.py", "src/debate_judge/debate.py")
 
 ChatFn = Callable[..., Any] | None
 
@@ -136,16 +142,29 @@ def run_concessions(pairs, debates_by_level: Mapping[str, Mapping], *, run: str,
     return _parallel(one, jobs, workers)
 
 
-def concession_rates(rows: Sequence[Mapping]) -> dict[str, dict]:
-    """Per debater effort: how often wrong-side debaters concede, by the automatic check."""
+def _truthy(value) -> bool:
+    """CSV cells come back as text: "True"/"False"."""
+    return value is True or str(value).strip().lower() == "true"
+
+
+def concession_rates(rows: Sequence[Mapping], label_key: str = "auto_verdict") -> dict[str, dict]:
+    """Per debater effort: how often wrong-side debaters concede.
+
+    label_key is "auto_verdict" (the automatic check) or "hand_label" (Adrian's labels). Incomplete
+    arguments cannot concede, so they are left out of the denominator and reported separately.
+    No complete wrong-side argument at some effort is an error, not a NO-GO.
+    """
     out = {}
     for level in sorted({r["debater_thinking"] for r in rows}):
-        wrong = [r for r in rows if r["debater_thinking"] == level and not r["assigned_correct"]]
-        concedes = sum(r["auto_verdict"] == "concedes" for r in wrong)
-        out[level] = {"wrong_side_arguments": len(wrong), "concedes": concedes,
-                      "unclear": sum(r["auto_verdict"] == "unclear" for r in wrong),
-                      "incomplete": sum(not r["complete"] for r in wrong),
-                      "rate": concedes / len(wrong) if wrong else float("nan")}
+        wrong = [r for r in rows if r["debater_thinking"] == level and not _truthy(r["assigned_correct"])]
+        complete = [r for r in wrong if _truthy(r["complete"])]
+        if not complete:
+            raise ValueError(f"no complete wrong-side arguments at debater effort {level!r}; cannot compute a concession rate")
+        concedes = sum(r[label_key] == "concedes" for r in complete)
+        out[level] = {"wrong_side_arguments": len(complete), "concedes": concedes,
+                      "unclear": sum(r[label_key] == "unclear" for r in complete),
+                      "incomplete_excluded": len(wrong) - len(complete),
+                      "rate": concedes / len(complete)}
     return out
 
 
@@ -156,22 +175,52 @@ def debater_cost_per_pair(debates: Mapping[str, Mapping]) -> tuple[float, float]
     return both, both / 2
 
 
-def suggested_votes(condition_cost_per_pair: float, weak_cost_per_pair: float) -> int:
-    """Odd number of weak-judge verdicts per order that costs closest to the condition (at least 1)."""
+def votes_needed(condition_cost_per_pair: float, weak_cost_per_pair: float) -> int:
+    """Odd number of weak-judge verdicts per order that costs closest to the condition (at least 1), uncapped."""
     ratio = condition_cost_per_pair / weak_cost_per_pair
     odd_below = max(1, int(ratio) if int(ratio) % 2 == 1 else int(ratio) - 1)
     return min((odd_below, odd_below + 2), key=lambda k: (abs(k - ratio), k))
 
 
-def git_state(repo: Path) -> dict:
-    def git(*args):
-        try:
-            return subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
-        except Exception:
-            return None
-    return {"commit": git("rev-parse", "--short", "HEAD"),
-            "prompts_modified": bool(git("status", "--porcelain", "--", "src/debate_judge/prompts.py")),
-            "tags_at_head": (git("tag", "--points-at", "HEAD") or "").split()}
+def suggested_votes(condition_cost_per_pair: float, weak_cost_per_pair: float) -> int:
+    """votes_needed(), capped at MAX_VOTES per order as in the proposal. Use vote_cap_exceeded() to flag."""
+    return min(votes_needed(condition_cost_per_pair, weak_cost_per_pair), MAX_VOTES)
+
+
+def vote_cap_exceeded(condition_cost_per_pair: float, weak_cost_per_pair: float) -> bool:
+    return votes_needed(condition_cost_per_pair, weak_cost_per_pair) > MAX_VOTES
+
+
+def _git(repo: Path, *args) -> tuple[int, str]:
+    try:
+        p = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True)
+        return p.returncode, p.stdout.strip()
+    except Exception:
+        return -1, ""
+
+
+def git_state(repo: Path, tag: str = FREEZE_TAG, files: Sequence[str] = FROZEN_FILES) -> dict:
+    """Whether the code that decides results matches the frozen tag (Adrian's PR #12 review).
+
+    frozen is True only if the tag exists, the frozen files are identical between the tag and HEAD,
+    and none of them has uncommitted changes. Other files (data, notes, results) may differ.
+    """
+    _, commit = _git(repo, "rev-parse", "--short", "HEAD")
+    tag_code, tag_commit = _git(repo, "rev-parse", "--short", f"{tag}^{{commit}}")
+    tag_exists = tag_code == 0 and bool(tag_commit)
+    diff_code = _git(repo, "diff", "--quiet", tag, "HEAD", "--", *files)[0] if tag_exists else None
+    _, dirty = _git(repo, "status", "--porcelain", "--", *files)
+    same_as_tag = diff_code == 0
+    return {
+        "commit": commit,
+        "freeze_tag": tag,
+        "tag_exists": tag_exists,
+        "tag_commit": tag_commit if tag_exists else None,
+        "frozen_files": list(files),
+        "frozen_files_same_as_tag": same_as_tag,
+        "frozen_files_uncommitted_changes": bool(dirty),
+        "frozen": tag_exists and same_as_tag and not dirty,
+    }
 
 
 # ---------------------------------------------------------------- stages
@@ -223,6 +272,8 @@ def run_stage(stage: str, pairs: Sequence[Mapping], *, chat_fn: ChatFn = None, w
     weak_verdict_cost = weak.cost_match_per_pair / 2  # one order
     k = {name: suggested_votes(cost / 2, weak_verdict_cost) for name, cost in cost_per_pair.items()
          if name != "judge_none"}
+    over_cap = {name: votes_needed(cost / 2, weak_verdict_cost) for name, cost in cost_per_pair.items()
+                if name != "judge_none" and vote_cap_exceeded(cost / 2, weak_verdict_cost)}
 
     # ---- go/no-go
     go_cmp = stats.paired_comparison(weak.correct, conditions[f"judge_{GO_THINKING_LEVEL}"].correct)
@@ -248,6 +299,8 @@ def run_stage(stage: str, pairs: Sequence[Mapping], *, chat_fn: ChatFn = None, w
                 "suggested_votes_per_order": k.get(name),
             } for name, c in conditions.items()
         },
+        "vote_cap_per_order": MAX_VOTES,
+        "conditions_over_vote_cap": over_cap,  # condition -> votes it would need; capped at MAX_VOTES above
         "debater_cost_match_per_pair": {lvl: round(v[0], 6) for lvl, v in debater_costs.items()},
         "debater_incomplete": {lvl: sum(not a.complete for args in d.values() for a in args.values())
                                for lvl, d in debates.items()},
@@ -270,7 +323,7 @@ def run_stage(stage: str, pairs: Sequence[Mapping], *, chat_fn: ChatFn = None, w
             "thinking_minus_weak": str(go_cmp),
             "concessions_ok_auto": concession_ok,
             "decision_auto": "GO (question 6)" if go_cmp.b_better and concession_ok else "NO-GO (switch to question 8)",
-            "note": "Confirm the concession rate with Adrian's hand labels in concession_review.csv before deciding.",
+            "note": "Not final: fill hand_label in concession_review.csv, then run `python scripts/run_pilot.py decide`.",
         },
         "spend_usd": round(sum(c.cost_usd for c in conditions.values())
                            + sum(a.cost_usd for d in debates.values() for args in d.values() for a in args.values())
@@ -292,5 +345,45 @@ def write_outputs(result: Mapping, out_dir: Path) -> None:
             w.writerows(sorted(rows, key=lambda r: (r["debater_thinking"], r["assigned_correct"], r["pair_id"])))
 
 
-__all__ = ["run_stage", "write_outputs", "suggested_votes", "concession_rates", "git_state",
+def read_concession_csv(path: Path) -> list[dict]:
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        return list(csv.DictReader(f))
+
+
+def decide(summary: Mapping, rows: Sequence[Mapping]) -> dict:
+    """The final go/no-go from the pilot summary and the hand-labelled concession CSV (Adrian's PR #12 review).
+
+    Every complete wrong-side argument must have a hand_label of defends, concedes or unclear.
+    Returns the "go_no_go_final" record: hand-label concession rates per effort, agreement of the hand
+    labels with the automatic check, and the decision. Nothing here calls the API.
+    """
+    wrong = [r for r in rows if not _truthy(r["assigned_correct"]) and _truthy(r["complete"])]
+    bad = [(r["pair_id"], r["debater_thinking"], r.get("hand_label")) for r in wrong
+           if (r.get("hand_label") or "").strip().lower() not in CONCESSION_LABELS]
+    if bad:
+        raise ValueError(f"{len(bad)} wrong-side rows have no valid hand_label (use {', '.join(CONCESSION_LABELS)}); "
+                         f"first: {bad[:3]}")
+    labelled = [{**r, "hand_label": r["hand_label"].strip().lower()} for r in rows]
+    rates = concession_rates(labelled, "hand_label")
+    agree = sum(r["hand_label"].strip().lower() == r["auto_verdict"] for r in wrong)
+    disagreements = [{"pair_id": r["pair_id"], "debater_thinking": r["debater_thinking"],
+                      "hand_label": r["hand_label"].strip().lower(), "auto_verdict": r["auto_verdict"]}
+                     for r in wrong if r["hand_label"].strip().lower() != r["auto_verdict"]]
+    thinking_ok = bool(summary["go_no_go"]["thinking_beats_weak"])
+    concession_ok = all(r["rate"] < MAX_CONCESSION_RATE for r in rates.values())
+    return {
+        "rule": summary["go_no_go"]["rule"],
+        "thinking_beats_weak": thinking_ok,
+        "thinking_minus_weak": summary["go_no_go"]["thinking_minus_weak"],
+        "concession_hand": rates,
+        "concessions_ok_hand": concession_ok,
+        "hand_vs_auto_agreement": {"agree": agree, "of": len(wrong),
+                                   "rate": agree / len(wrong) if wrong else float("nan"),
+                                   "disagreements": disagreements},
+        "decision": "GO (question 6)" if thinking_ok and concession_ok else "NO-GO (switch to question 8)",
+    }
+
+
+__all__ = ["run_stage", "write_outputs", "suggested_votes", "votes_needed", "vote_cap_exceeded", "concession_rates",
+           "decide", "read_concession_csv", "git_state",
            "WEAK_JUDGE_TEMPERATURE"]

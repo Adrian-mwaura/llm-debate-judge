@@ -151,14 +151,21 @@ Every change is reviewed by the other member in a pull request before it is merg
 - `python scripts/run_pilot.py pilot`: the 200 `pilot_pairs`. Weak judge, thinking judge at `low` and `high`;
   debaters at `low` and `high` on the first 30 pilot pairs (both sides), the weak judge reading those debates and the
   one-sided argument, and the automatic concession check. About US$1.50–2.
-- It refuses to run at peak price (`--allow-peak` overrides), and refuses the pilot unless the prompts are committed and the
-  commit is tagged (freeze: `git tag prompts-v1 && git push origin prompts-v1`; `--allow-unfrozen` overrides).
+- **Freeze check:** the tag `prompts-v1` (on `5509a74`) must exist, and the code that decides results,
+  `prompts.py`, `judge.py` and `debate.py` (`pilot.FROZEN_FILES`), must be identical to the tag with no uncommitted changes.
+  Later commits to other files (data, notes, results, new scripts) are fine. The check is recorded in `summary.json`.
+  **Any change to those three files after the tag means a new tag and new runs.** It also refuses peak price.
+  Overrides: `--allow-peak`, `--allow-unfrozen` (avoid).
 - Outputs: `results/<stage>/summary.json` (accuracy with intervals, paired comparisons, outcomes, incomplete and unparsed
-  counts, cost per pair including debater arguments, suggested votes k per order, go/no-go) and
-  `results/<stage>/concession_review.csv` (every argument with the automatic verdict and an empty `hand_label` column).
+  counts, cost per pair including debater arguments, suggested votes k per order capped at 15 with any condition over the
+  cap flagged, go/no-go) and `results/<stage>/concession_review.csv` (every argument, automatic verdict, empty `hand_label`).
 - **The weak judge always runs at `pilot.WEAK_JUDGE_TEMPERATURE` (1.0)**, alone, with debates and in the vote baseline,
   so the judge-alone call is vote sample 0 and is paid once.
-- Go/no-go is printed as `decision_auto`; Adrian confirms the concession rate by filling `hand_label` before we decide.
+- Concession rates leave incomplete arguments out of the denominator (reported as `incomplete_excluded`); no complete
+  wrong-side argument at an effort is an error, not a NO-GO.
+- **The go/no-go is final only after `python scripts/run_pilot.py decide`** (no API calls). It needs `hand_label` set to
+  `defends`, `concedes` or `unclear` on every complete wrong-side row of `results/pilot/concession_review.csv`, computes the
+  hand-label concession rates and their agreement with the automatic check, and writes `go_no_go_final` into `summary.json`.
 
 ## Planned layout
 
