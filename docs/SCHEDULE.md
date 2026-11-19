@@ -22,7 +22,7 @@ Tick the boxes as tasks are done, in the same PR as the work or in `docs/NOTES.m
 ### Tue 17 Nov
 
 - [x] Varun: JudgeBench loader and both-order scoring (`data.py`), in a PR. *Carried over from Mon 16; it blocks the pilot.*
-- [ ] Varun: review PR #5 (proposal) and PR #6 (judge).
+- [x] Varun: review PR #5 (proposal) and PR #6 (judge).
 - [x] Adrian: debater prompt and `debate.py` (one-round debate, one-sided argument, concession check), in a PR.
 - [x] Adrian: review Varun's loader PR.
 - [ ] Both, evening: freeze the prompts with a git tag, dry run on 10–20 pairs, start the 200-pair pilot.

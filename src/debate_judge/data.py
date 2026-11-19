@@ -4,7 +4,8 @@
     pairs = load_judgebench()            # all 620 pairs, as dicts, in a fixed order
     dry = dry_run_pairs(pairs)           # 20 pairs for prompt dry runs; never reported
     pilot = pilot_pairs(pairs)           # 200 pairs for the go/no-go pilot (disjoint from dry)
-    full = report_pairs(pairs)           # the 600 pairs that go into reported results
+    full = report_pairs(pairs)           # the 600 pairs that go into reported results (pilot first)
+    check = non_pilot_pairs(pairs)       # the 400 reported pairs outside the pilot
     s = score_pair(pair["label"], verdict.decisions)   # judge.PairVerdict.decisions
 
 Data: ScalerLab/JudgeBench on Hugging Face, pinned to one revision so both of us get the same pairs.
@@ -22,7 +23,8 @@ from __future__ import annotations
 import random
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Sequence
+from functools import lru_cache
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 DATASET = "ScalerLab/JudgeBench"
 REVISION = "57dd5e0b9817d07f05ec8f45a91b2ce1e310e308"  # checked 2026-11-17: 350 gpt + 270 claude pairs
@@ -83,37 +85,68 @@ def load_judgebench(splits: Sequence[str] = SPLITS, revision: str = REVISION) ->
 # ---------------------------------------------------------------- fixed subsets
 
 
-def _stratified_order(pairs: Sequence[Mapping[str, Any]], seed: int) -> list[Mapping[str, Any]]:
-    """All pairs in a seeded order where every prefix keeps the category mix of the whole set.
+def _by_category(p: Mapping[str, Any]) -> str:
+    return p["category"]
 
-    Pairs are shuffled within each category, then interleaved by largest remaining share,
-    so the first n pairs have about the same proportions of knowledge, reasoning, math and coding.
+
+def _by_category_and_split(p: Mapping[str, Any]) -> tuple[str, str]:
+    return p["category"], p["split"]
+
+
+def _stratified_order(
+    pairs: Sequence[Mapping[str, Any]],
+    seed: int,
+    stratum: Callable[[Mapping[str, Any]], Any] = _by_category,
+) -> list[Mapping[str, Any]]:
+    """All pairs in a seeded order where every prefix keeps the mix of strata of the whole set.
+
+    Pairs are shuffled within each stratum (by default the category), then interleaved by largest
+    remaining share, so the first n pairs have about the same proportions as the whole set.
     """
     rng = random.Random(seed)
-    by_cat: dict[str, list] = {}
+    by_stratum: dict[Any, list] = {}
     for p in sorted(pairs, key=lambda p: p["pair_id"]):  # independent of load order
-        by_cat.setdefault(p["category"], []).append(p)
-    for cat in sorted(by_cat):
-        rng.shuffle(by_cat[cat])
+        by_stratum.setdefault(stratum(p), []).append(p)
+    for s in sorted(by_stratum):
+        rng.shuffle(by_stratum[s])
     total = len(pairs)
-    size = {c: len(items) for c, items in by_cat.items()}
+    size = {s: len(items) for s, items in by_stratum.items()}
     taken = Counter()
     order = []
     for i in range(total):
-        # the category furthest behind its share of the first i+1 pairs (ties: alphabetical)
-        left = [c for c in sorted(by_cat) if by_cat[c]]
-        cat = max(left, key=lambda c: size[c] * (i + 1) / total - taken[c])
-        order.append(by_cat[cat].pop())
-        taken[cat] += 1
+        # the stratum furthest behind its share of the first i+1 pairs (ties: sorted order)
+        left = [s for s in sorted(by_stratum) if by_stratum[s]]
+        s = max(left, key=lambda s: size[s] * (i + 1) / total - taken[s])
+        order.append(by_stratum[s].pop())
+        taken[s] += 1
     return order
 
 
+@lru_cache(maxsize=8)
+def _subset_ids(rows: tuple[tuple[Any, str, str], ...], seed: int) -> tuple[tuple, tuple, tuple]:
+    """(dry-run ids, pilot ids, report ids) for the pairs given as (pair_id, category, split) rows.
+
+    The dry-run pairs are the first DRY_RUN_SIZE of a category-stratified order. That is the
+    selection the 2026-11-18 dry run used, kept so those pairs stay out of reported results.
+    The remaining pairs are then ordered by category AND split (the model that wrote the responses),
+    and the pilot is the first PILOT_SIZE of that order, so it mirrors the full set on both.
+    Cached, so the three subset functions share one computed order.
+    """
+    records = [{"pair_id": i, "category": c, "split": s} for i, c, s in rows]
+    dry_ids = tuple(p["pair_id"] for p in _stratified_order(records, seed, _by_category)[:DRY_RUN_SIZE])
+    rest = [p for p in records if p["pair_id"] not in set(dry_ids)]
+    report_ids = tuple(p["pair_id"] for p in _stratified_order(rest, seed, _by_category_and_split))
+    return dry_ids, report_ids[:PILOT_SIZE], report_ids
+
+
 def _subsets(pairs: Sequence[Mapping[str, Any]], seed: int = SUBSET_SEED) -> dict[str, list]:
-    order = _stratified_order(pairs, seed)
+    rows = tuple(sorted((p["pair_id"], p["category"], p["split"]) for p in pairs))
+    dry, pilot, report = _subset_ids(rows, seed)
+    by_id = {p["pair_id"]: p for p in pairs}
     return {
-        "dry_run": order[:DRY_RUN_SIZE],
-        "pilot": order[DRY_RUN_SIZE:DRY_RUN_SIZE + PILOT_SIZE],
-        "report": order[DRY_RUN_SIZE:],
+        "dry_run": [by_id[i] for i in dry],
+        "pilot": [by_id[i] for i in pilot],
+        "report": [by_id[i] for i in report],
     }
 
 
@@ -123,14 +156,21 @@ def dry_run_pairs(pairs: Sequence[Mapping[str, Any]]) -> list:
 
 
 def pilot_pairs(pairs: Sequence[Mapping[str, Any]]) -> list:
-    """200 pairs for the go/no-go pilot. They are a subset of report_pairs(), so the full runs
-    reuse the pilot's cached calls instead of paying for them again."""
+    """200 pairs for the go/no-go pilot, with the category and response-author mix of the full set.
+    They are a subset of report_pairs(), so the full runs reuse the pilot's cached calls."""
     return _subsets(pairs)["pilot"]
 
 
 def report_pairs(pairs: Sequence[Mapping[str, Any]]) -> list:
-    """Every pair except the dry-run pairs: the set all reported results use (600 of 620)."""
+    """Every pair except the dry-run pairs: the set all reported results use (600 of 620).
+    The first 200 are the pilot pairs."""
     return _subsets(pairs)["report"]
+
+
+def non_pilot_pairs(pairs: Sequence[Mapping[str, Any]]) -> list:
+    """The 400 reported pairs outside the pilot. The pilot decided go/no-go, so the report also shows
+    results on these alone as a check."""
+    return _subsets(pairs)["report"][PILOT_SIZE:]
 
 
 # ---------------------------------------------------------------- scoring
@@ -186,7 +226,8 @@ def majority(decisions: Iterable[str | None]) -> str | None:
 
 
 def summarize(scored: Iterable[tuple[Mapping[str, Any], PairScore]]) -> dict[str, Any]:
-    """Accuracy and outcome counts, overall and by category and group.
+    """Accuracy and outcome counts: "all", one key per category ("knowledge", "math", ...) and
+    one per group ("group:knowledge", "group:rmc").
 
     `scored` is (pair, PairScore) for each pair. Confidence intervals and paired tests are in stats.py.
     """
@@ -195,7 +236,9 @@ def summarize(scored: Iterable[tuple[Mapping[str, Any], PairScore]]) -> dict[str
 
     out = {"all": empty()}
     for pair, s in scored:
-        for key in ("all", pair["category"], pair["group"]):
+        # Groups get their own prefix: the knowledge category and the knowledge group share a name,
+        # and one bucket for both would count every knowledge pair twice.
+        for key in ("all", pair["category"], f"group:{pair['group']}"):
             b = out.setdefault(key, empty())
             b["n"] += 1
             b["correct"] += s.correct

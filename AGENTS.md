@@ -122,11 +122,14 @@ Every change is reviewed by the other member in a pull request before it is merg
 - **Fixed subsets; always use these, never pick pairs by hand:**
   - `dry_run_pairs(pairs)`: 20 pairs for prompt dry runs. Never in reported results.
   - `pilot_pairs(pairs)`: 200 pairs for the go/no-go pilot. They are part of the reported set, so the full run reuses their cached calls.
-  - `report_pairs(pairs)`: the 600 pairs all reported results use.
-  All keep the category mix of the full set.
+  - `report_pairs(pairs)`: the 600 pairs all reported results use (the pilot pairs first).
+  - `non_pilot_pairs(pairs)`: the 400 reported pairs outside the pilot, for the report's check that excludes the pilot.
+  All keep the category mix of the full set; the pilot also keeps the mix of response authors (gpt or claude).
+  The dry-run pairs are fixed: they are the 20 pairs the 2026-11-18 dry run used.
 - `score_pair(label, verdict.decisions)` applies JudgeBench's rule. The decisions are in original labels, as `judge.py` returns them; do not flip.
   Outcomes: `both_right`, `both_wrong`, `split` (same shown position both times; `first_slot` says which), `partial_right`, `partial_wrong`, `no_verdict`.
-- `majority(decisions)` combines votes for one order (ties give `None`); `summarize(...)` gives accuracy by category and group.
+- `majority(decisions)` combines votes for one order (ties give `None`); `summarize(...)` gives accuracy overall (`"all"`),
+  by category (`"knowledge"`, `"math"`, ...) and by group (`"group:knowledge"`, `"group:rmc"`).
 - Scoring was checked against JudgeBench's published outputs: GPT-4o 50.9, DeepSeek-R1 73.1 and o3-mini (high) 80.9, matching exactly.
 
 ## Using the statistics (built)
