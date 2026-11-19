@@ -1,0 +1,63 @@
+{
+ "key": "52c8a3aad2eb3ccb43b00502c8cea776496dff7db113102e13ddade4505f83db",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nSnuke the doctor prescribed N kinds of medicine for Takahashi.  For the next a_i days (including the day of the prescription), he has to take b_i pills of the i-th medicine.  He does not have to take any other medicine.\nLet the day of the prescription be day 1.  On or after day 1, when is the first day on which he has to take K pills or less?\n\nInput\n\nThe input is given from Standard Input in the following format:\nN K\r\na_1 b_1\r\n\\vdots\r\na_N b_N\n\nOutput\n\nIf Takahashi has to take K pills or less on day X for the first time on or after day 1, print X.\n\nConstraints\n\n\n- 1 \\leq N \\leq 3 \\times 10^5\n- 0 \\leq K \\leq 10^9\n- 1 \\leq a_i,b_i \\leq 10^9\n- All input values are integers.\n\nSample Input 1\n\n4 8\r\n6 3\r\n2 5\r\n1 9\r\n4 2\n\nSample Output 1\n\n3\r\n\nOn day 1, he has to take 3,5,9, and 2 pills of the 1-st, 2-nd, 3-rd, and 4-th medicine, respectively.  In total, he has to take 19 pills on this day, which is not K(=8) pills or less.\r\nOn day 2, he has to take 3,5, and 2 pills of the 1-st, 2-nd, and 4-th medicine, respectively.  In total, he has to take 10 pills on this day, which is not K(=8) pills or less.\r\nOn day 3, he has to take 3 and 2 pills of the 1-st and 4-th medicine, respectively.  In total, he has to take 5 pills on this day, which is K(=8) pills or less for the first time.  \nThus, the answer is 3.\n\nSample Input 2\n\n4 100\r\n6 3\r\n2 5\r\n1 9\r\n4 2\n\nSample Output 2\n\n1\n\nSample Input 3\n\n15 158260522\r\n877914575 2436426\r\n24979445 61648772\r\n623690081 33933447\r\n476190629 62703497\r\n211047202 71407775\r\n628894325 31963982\r\n822804784 50968417\r\n430302156 82631932\r\n161735902 80895728\r\n923078537 7723857\r\n189330739 10286918\r\n802329211 4539679\r\n303238506 17063340\r\n492686568 73361868\r\n125660016 50287940\n\nSample Output 3\n\n492686569\n\n# Response A\n\n# YOUR CODE HERE\nimport sys\nfrom collections import defaultdict\n\nN, K = map(int, input().split())\nmedicines = defaultdict(int)\n\nfor _ in range(N):\n    a, b = map(int, input().split())\n    medicines[a] += b\n\ndays = sorted(medicines.keys())\ntotal_pills = sum(medicines.values())\n\nif total_pills <= K:\n    print(1)\nelse:\n    current_day = 1\n    for day in days:\n        if day > current_day:\n            if total_pills <= K:\n                print(current_day)\n                break\n            current_day = day\n        total_pills -= medicines[day]\n        if total_pills <= K:\n            print(day + 1)\n            break\n    else:\n        print(days[-1] + 1)\n\n# Response B\n\n# YOUR CODE HERE\nimport sys\nfrom collections import defaultdict\n\nN, K = map(int, input().split())\nmedicines = defaultdict(int)\n\nfor _ in range(N):\n    a, b = map(int, input().split())\n    medicines[a] += b\n\ndays = sorted(medicines.keys())\ntotal_pills = sum(medicines.values())\n\nif total_pills <= K:\n    print(1)\nelse:\n    current_day = 1\n    for day in days:\n        if day > current_day:\n            if total_pills <= K:\n                print(current_day)\n                break\n            current_day = day\n        total_pills -= medicines[day]\n        if total_pills <= K:\n            print(current_day)\n            break\n    else:\n        print(max(days) + 1)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 32000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "high",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\":\"Response A handles the timing correctly: after subtracting medicines whose duration ends on day `d`, the reduced pill count first applies on day `d+1`. A prints `day + 1`, matching this. Response B prints `current_day` instead, causing an off-by-one error, e.g. for Sample 1 it would output 2 instead of 3. Therefore A is correct.\",\"winner\":\"A\"}",
+  "reasoning": "We need answer judge. Need compare. Need solve question and see which response correct. Need only JSON. Need analyze carefully.\n\nProblem AtCoder ABC188 D? Actually \"Snuke the doctor prescribed...\" is ABC188 D - Snuke Prime? Wait exact: AtCoder ABC188 D maybe \"Snuke Prime\": N services, each costs c_i per day over [a_i,b_i], pay P per day. Different? Here medicine with a_i days and b_i pills. This is AtCoder ABC188 C? Actually problem is ABC188 D? Let's recall: ABC188 D - Snuke Prime: N intervals [a_i,b_i] with cost c_i, subscription fee P per day. Not this.\n\nThis exact problem \"Snuke the doctor prescribed N kinds of medicine for Takahashi. For the next a_i days ... b_i pills...\" is AtCoder ABC 060? Hmm maybe ABC 065? Actually known ABC 188? It is AtCoder ABC 167? Let's identify: \"Snuke the doctor\" from AtCoder ABC 060 B? No. I recall AtCoder ABC 130? There is ABC 153 E? Problem \"Medicine\" maybe ABC 060? Let's derive.\n\nWe need determine correct code.\n\nWe have N kinds medicine. For next a_i days including day prescription (day 1), take b_i pills of i-th medicine. Thus medicine i contributes b_i pills on days 1 through a_i inclusive. Total on day d = sum_{i: a_i >= d} b_i. Need first day d>=1 with total <= K.\n\nGiven pairs (a_i, b_i). Need sort by a_i descending maybe subtract as days pass. If total day 1 <= K print 1. Else pills remain until days after expiration of medicines with a_i = d. On day d+1, remove all medicines with a_i = d. Need first d such that after removals total <= K, print d+1? Need consider if total becomes <=K on day x after removing those whose a_i < x. If initial not. We can sort a ascending, total initial sum. For each expiration day a, subtract b for meds with a==a; after that day a, from day a+1 onward sum decreases. If total <= K after processing expiration day a, answer a+1. If never? Eventually all expire after max a, total 0 <=K, answer max a + 1 (since constraints b positive, K>=0). But if K initial? If total <=K print 1. Code should do.\n\nNow compare Response A and B. Both nearly same. Difference at after subtract:\nA:\n```\nfor day in days:\n    if day > current_day:\n        if total_pills <= K:\n            print(current_day)\n            break\n        current_day = day\n    total_pills -= medicines[day]\n    if total_pills <= K:\n        print(day + 1)\n        break\nelse:\n    print(days[-1] + 1)\n```\nB:\n```\n...\nif total_pills <= K:\n    print(current_day)\n    break\n...\nelse:\n    print(max(days)+1)\n```\nWhich is correct? Need scrutinize.\n\nThe loop in A: current_day initially 1. days sorted ascending are expiry days. For each day:\n- If day > current_day:\n   if total <=K print current_day; break\n   current_day = day\n- subtract meds expiring at day\n- if total <=K print day+1; break\nelse print days[-1]+1.\n\nSince initial total>K. Suppose first day(s) sorted maybe min a. If min a >1? Wait a_i >=1. If min a could be1. The medicine contributes days 1..a. On day 1, total initial. If initial >K, not answer 1. For expirations at day 1, they are not taken on day 2; after subtract, if total <=K answer day+1=2. Correct. If no expirations at day1 (min a>1), day1 total >K, but there is no change until min a. On days 1..min a, total same >K. On day min a+1, after medicines with a=min a expire. So answer min a+1 if subtract <=K. A: day=min a> current_day=1, checks total<=K false, current_day=day; subtract; if total<=K print day+1. Correct. If multiple consecutive expiry days? Suppose after subtracting day d total still >K. current_day = d. Next expiry day e>d: at top if e>current day, check total<=K (still >K) then current_day=e; subtract etc. If after processing e total<=K print e+1. Correct.\n\nBut A's top check if total<=K before processing next day may be redundant; can it cause wrong print? Need examine. Suppose after processing previous day d, total >K, so won't. If total became <=K, A already printed d+1 and break, so no next. If no meds? N>=1. So top check never true when reached? Unless duplicate days grouped? days unique, each processed once. Initial >K. It could be true at start if initial total? But outer else only if initial >K. After each iteration if total <=K break. So at next iteration total >K. Thus top check false. So A effectively same as B for subtract branch? B prints current_day instead of day+1 in subtract branch. Need evaluate B.\n\nB:\n```\nfor day in days:\n    if day > current_day:\n        if total_pills <= K:\n            print(current_day)\n            break\n        current_day = day\n    total_pills -= medicines[day]\n    if total_pills <= K:\n        print(current_day)\n        break\nelse:\n    print(max(days)+1)\n```\nSince current_day set to day before subtract at top if day>current. So in subtract branch print current_day, which equals day unless day==current_day? current_day initially 1. If first expiry day=1, condition day > current_day? 1>1 false, current_day remains 1. Subtract meds a=1. If total<=K print current_day = 1. But correct answer should be 2, because on day1 total >K (initial >K), on day2 after day1 meds expire. B prints 1. Wrong. If first expiry day>1, current_day set to day, subtract, print day, but correct answer is day+1. B wrong. For sample 1: initial total 19>K 8. days [1,2,4,6]? a values: 6,2,1,4 -> sorted [1,2,4,6]; medicines[1]=9, [2]=5, [4]=2, [6]=3. B: day=1, day>1 no, subtract 9 =>10>K; day=2 > current 1, total 10<=8 no, current=2; subtract5=>5<=8 print current_day=2. Sample output 3. B wrong. A prints day+1=3. So A correct.\n\nNeed provide JSON with reasoning max 100 words and winner A. Ensure exact schema. Could mention B off-by-one prints current_day (expiration day) instead of next day. In all cases after subtracting medicines expiring on day, reduction applies from day+1. A does day+1. For day=1 example. Also A else max same. Final JSON only.",
+  "finish_reason": "stop",
+  "prompt_tokens": 1135,
+  "cache_hit_tokens": 768,
+  "completion_tokens": 1702,
+  "reasoning_tokens": 1612,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 1702,
+   "prompt_tokens": 1135,
+   "total_tokens": 2837,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 1612,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 768,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 768,
+   "prompt_cache_miss_tokens": 367
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-19T05:06:22.274596+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.0010785539999999998,
+ "latency_s": 11.172
+}

@@ -25,14 +25,14 @@ Tick the boxes as tasks are done, in the same PR as the work or in `docs/NOTES.m
 - [x] Varun: review PR #5 (proposal) and PR #6 (judge).
 - [x] Adrian: debater prompt and `debate.py` (one-round debate, one-sided argument, concession check), in a PR.
 - [x] Adrian: review Varun's loader PR.
-- [ ] Both, evening: freeze the prompts with a git tag, dry run on 10–20 pairs, start the 200-pair pilot.
+- [x] Both, evening: freeze the prompts with a git tag, dry run on 10–20 pairs, start the 200-pair pilot. *Done late: dry run Wed 18, tag `prompts-v1` and pilot Thu 19 13:00.*
 
 ### Wed 18 Nov
 
 - [ ] Both, by midday: go/no-go from the pilot (question 6, or switch to question 8); finish the proposal and merge it.
 - [ ] Adrian: full debate and one-sided runs on all 620 pairs.
 - [ ] Varun: vote baseline, cost matching and thinking-judge runs.
-- [ ] Varun: confidence intervals and paired tests (`stats.py`).
+- [x] Varun: confidence intervals and paired tests (`stats.py`).
 
 ### Thu 19 Nov
 

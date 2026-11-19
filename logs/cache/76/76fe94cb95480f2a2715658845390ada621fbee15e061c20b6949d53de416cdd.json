@@ -1,0 +1,63 @@
+{
+ "key": "76fe94cb95480f2a2715658845390ada621fbee15e061c20b6949d53de416cdd",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nTakahashi has decided to give one gift to Aoki and one gift to Snuke.\r\nThere are N candidates of gifts for Aoki,\r\nand their values are A_1, A_2, \\ldots,A_N.\r\nThere are M candidates of gifts for Snuke,\r\nand their values are B_1, B_2, \\ldots,B_M.  \nTakahashi wants to choose gifts so that the difference in values of the two gifts is at most D.\nDetermine if he can choose such a pair of gifts.  If he can, print the maximum sum of values of the chosen gifts.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN M D\r\nA_1 A_2 \\ldots A_N\r\nB_1 B_2 \\ldots B_M\n\nOutput\n\nIf he can choose gifts to satisfy the condition,\r\nprint the maximum sum of values of the chosen gifts.\r\nIf he cannot satisfy the condition, print -1.\n\nConstraints\n\n\n- 1\\leq N,M\\leq 2\\times 10^5\n- 1\\leq A_i,B_i\\leq 10^{18}\n- 0\\leq D \\leq 10^{18}\n- All values in the input are integers.\n\nSample Input 1\n\n2 3 2\r\n3 10\r\n2 5 15\n\nSample Output 1\n\n8\r\n\nThe difference of values of the two gifts should be at most 2.\r\nIf he gives a gift with value 3 to Aoki and another with value 5 to Snuke, the condition is satisfied, achieving the maximum possible sum of values.\r\nThus, 3+5=8 should be printed.\n\nSample Input 2\n\n3 3 0\r\n1 3 3\r\n6 2 7\n\nSample Output 2\n\n-1\r\n\nHe cannot choose gifts to satisfy the condition.\r\nNote that the candidates of gifts for a person may contain multiple gifts with the same value.\n\nSample Input 3\n\n1 1 1000000000000000000\r\n1000000000000000000\r\n1000000000000000000\n\nSample Output 3\n\n2000000000000000000\r\n\nNote that the answer may not fit into a 32-bit integer type.\n\nSample Input 4\n\n8 6 1\r\n2 5 6 5 2 1 7 9\r\n7 2 5 5 2 4\n\nSample Output 4\n\n14\n\n# Response A\n\n# YOUR CODE HERE\ndef find_max_sum(N, M, D, A, B):\n    A.sort()\n    B.sort()\n    \n    max_sum = -1\n    j = 0\n    \n    for a in A:\n        while j < M and B[j] < a - D:\n            j += 1\n        if j < M and B[j] <= a + D:\n            max_sum = max(max_sum, a + B[j])\n    \n    return max_sum\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nN = int(data[0])\nM = int(data[1])\nD = int(data[2])\nA = list(map(int, data[3:3+N]))\nB = list(map(int, data[3+N:]))\n\nprint(find_max_sum(N, M, D, A, B))\n\n# Response B\n\n# YOUR CODE HERE\ndef find_max_sum(N, M, D, A, B):\n    A.sort()\n    B.sort()\n    \n    max_sum = -1\n    j = 0\n    \n    for a in A:\n        while j < M and B[j] <= a + D:\n            if abs(a - B[j]) <= D:\n                max_sum = max(max_sum, a + B[j])\n            j += 1\n        if j > 0:\n            j -= 1\n    \n    return max_sum\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nN = int(data[0])\nM = int(data[1])\nD = int(data[2])\nA = list(map(int, data[3:3+N]))\nB = list(map(int, data[3+N:]))\n\nprint(find_max_sum(N, M, D, A, B))\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 16000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "low",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\":\"Response A is incorrect: it checks only the smallest B[j] >= a-D, not the largest qualifying B <= a+D. For sample 1, A would output 5 instead of 8. Response B correctly uses a sorted pointer to consider all B up to a+D, checks |a-B|<=D, and safely decrements the pointer to avoid skipping values for later larger A. It finds the maximum valid sum.\",\"winner\":\"B\"}",
+  "reasoning": "We need answer judge. Need determine which response correct. Need reason carefully. We can analyze both algorithms.\n\nProblem: Given sorted? Need max A_i+B_j subject |A_i-B_j|<=D. N,M up to 2e5. Need correct.\n\nResponse A algorithm:\nsort A, B. j=0. For each a in A ascending:\n while j<M and B[j] < a-D: j++ (skip too small)\n if j<M and B[j] <= a+D: max_sum=max(max_sum, a+B[j])\n return max_sum.\nIs this correct? For each a, j is first B >= a-D. If B[j] <= a+D then this B is smallest qualifying >= lower. But maximum sum for this a among qualifying B is largest B <= a+D, not smallest. However they do not advance j after? Since j monotonic by a. For a increasing, lower a-D increases, j only moves. For a fixed a, using B[j] (smallest >= lower) may miss larger B. But because A ascending, maybe when later a? Need check. Counterexample? A=[3,10], B=[2,5,15], D=2. Sort A 3,10 B 2,5,15. a=3: while B[0]<1 no; B[0]=2 <=5 qualifies sum5. j remains0. max5. a=10: while B[0]<8 j1; B[1]=5<8 j2; B[2]=15 not<8. B[2]=15<=12? false. max5. It outputs 5, but correct 8 (3+5). Response A wrong. Wait sample1 correct output 8; A would fail? Let's simulate exactly: a=3, j=0, B[0]=2, condition B[j]< a-D=1? no. if B[0]<=5 yes max=5. a=10, while j<3 and B[j]<8: j0 B2<8 j1; B5<8 j2; B15<8 no. if B[2]<=12? 15<=12 false. max stays5. Yes wrong.\n\nResponse B:\nsort A,B. j=0. for a in A:\n while j<M and B[j] <= a+D:\n   if abs(a-B[j])<=D: max...\n   j+=1\n if j>0: j-=1\nreturn max_sum\nNeed assess correctness. For each a ascending. It advances j while B[j] <= a+D. It checks abs <= D for all B <= a+D, and since j starts previous j-1 maybe. Then decrement j by 1 after. Does this cover all qualifying B for each a? Need consider.\n\nB sorted ascending. For a ascending. Qualifying B range [a-D, a+D]. We need max sum a + max B in range. Since a increasing. Algorithm j is maybe index after processing previous a, decremented. It processes B values <= a+D not processed? But if B less than lower a-D, it may still check abs false. It increments over them. Need ensure for each a, it considers all B <= a+D that could qualify, including B >= a-D. Because j starts at previous j-1, which might be less than lower? Let's test sample1: A [3,10], B [2,5,15], D2.\na=3: j0. while B[0]=2<=5: abs|3-2|1 yes max5; j1; B[1]=5<=5 abs2 yes max8; j2; B[2]=15<=5 false. j>0 -> j=1. max8.\na=10: j=1. while B[1]=5<=12: abs5 yes? |10-5|5 no; j2. B[2]=15<=12 false. j>0 j=1. max8. Output8 correct. It reused j decrement.\n\nBut is it correct generally? Need find counterexamples. Need analyze. It seems a common solution? Sort A and B, for each a, move pointer j while B[j] <= a+D, update if B[j] >= a-D (abs). Then after loop j--. This is similar two pointers but why decrement? Because after processing a, next a larger, upper a+D larger, so no need decrement? Actually if j points first B > a+D (or M), then for next a' > a, upper increases, so B[j] may now be <= a'+D, should process. But decrement by 1 causes rechecking last processed B. Is that harmful? It may process duplicate B, but max not harmed. But could it cause infinite? j decreases but next while can increase. For each a at most? It may not cover all? Let's reason.\n\nFor each a, desired max B in [a-D, a+D]. Since B sorted, max qualifying if any is largest B <= a+D and >=a-D. Algorithm processes all B from start index j (after decrement) up to first > a+D. It checks abs condition. The last processed B is largest <= a+D (unless j=M). It should update max if abs <=D. If there is any qualifying B, the largest <=a+D will qualify iff any? If there is qualifying B q <=a+D, the largest B <=a+D is >= q, but could exceed a+D? no, it's <=a+D; could it be less than a-D? q>=a-D, largest>=q>=a-D, so qualifies. Thus considering all B <=a+D includes largest qualifying. If algorithm's j start is <= that largest. Need ensure not skipping any <=a+D unprocessed. Initially j=0. After each iteration, j is index after largest B <=a+D (or M), then decremented to largest processed. For next a' > a, upper a'+D > a+D, so all B <= a+D already processed, and there may be more between a+D and a'+D. Starting at previous largest processed (j-1 after loop) is <= first new? It will process from that index, which includes maybe some already processed but also all new. If j was M, decrement to M-1, process through M-1? while B[M-1]<=a'+D maybe true, j goes M, then decrement. It does not process beyond M. Fine.\n\nBut wait: after loop, if j>0 j-=1; j is first index with B[j] > a+D (or M). Decrement gives largest index processed (<=a+D) or M-1. For next a, it starts at that index, which is <= all new B to process? There may be B at that index already processed but rechecked. The new B to process start at old j (first >a+D). Since old j-1 < old j, starting earlier includes all new. So it doesn't skip. Thus B seems correct.\n\nNeed check if B might incorrectly include B < a-D? It checks abs, so no. It may process B far below a-D, abs false. max not updated incorrectly. Good.\n\nBut wait Response B code: `while j < M and B[j] <= a + D:` then if abs <= D update, j++. It does not explicitly require B[j] >= a-D, but abs handles. After loop `if j > 0: j -= 1`. Suppose no B <= a+D? Since A,B positive and D maybe 0; if a very small, B[0] > a+D. Then while not enter; j remains maybe previous? After first a with j=0, if no B <=, j=0, no decrement. Next a larger, upper larger, eventually process. It starts j=0. Good. Suppose after processing some a, j= some k (first > upper), decrement to k-1. For next a, if upper still less than B[k-1]? Wait B[k-1] <= old upper <= new upper, so while enters at least B[k-1], processes. j increments to k. Then checks B[k] <= new upper possibly. It may reprocess B[k-1], not skip. Good.\n\nThus B correct. A wrong. Need final JSON with reasoning <=100 words and winner B.\n\nNeed include exact format. We can mention A fails sample1. Also B correct by sorted pointer. Need at most 100 words. Ensure JSON valid no extra.",
+  "finish_reason": "stop",
+  "prompt_tokens": 1050,
+  "cache_hit_tokens": 512,
+  "completion_tokens": 1915,
+  "reasoning_tokens": 1818,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 1915,
+   "prompt_tokens": 1050,
+   "total_tokens": 2965,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 1818,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 512,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 512,
+   "prompt_cache_miss_tokens": 538
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-19T05:03:09.139797+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.0012312360000000001,
+ "latency_s": 21.282
+}
