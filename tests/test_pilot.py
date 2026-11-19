@@ -101,3 +101,145 @@ def test_concession_rates():
     rows.append({"debater_thinking": "high", "assigned_correct": True, "auto_verdict": "concedes", "complete": True})
     r = pilot.concession_rates(rows)["high"]
     assert (r["wrong_side_arguments"], r["concedes"], r["unclear"]) == (4, 1, 1) and r["rate"] == 0.25
+
+
+# ---- Adrian's PR #12 review -------------------------------------------------------------
+
+
+def test_incomplete_arguments_leave_the_denominator():
+    rows = [{"debater_thinking": "low", "assigned_correct": False, "auto_verdict": v, "complete": c}
+            for v, c in (("concedes", True), ("defends", True), (None, False), (None, False))]
+    r = pilot.concession_rates(rows)["low"]
+    assert (r["wrong_side_arguments"], r["incomplete_excluded"], r["rate"]) == (2, 2, 0.5)
+
+
+def test_no_complete_wrong_side_argument_is_an_error_not_no_go():
+    rows = [{"debater_thinking": "low", "assigned_correct": False, "auto_verdict": None, "complete": False},
+            {"debater_thinking": "low", "assigned_correct": True, "auto_verdict": "defends", "complete": True}]
+    with pytest.raises(ValueError, match="no complete wrong-side"):
+        pilot.concession_rates(rows)
+
+
+def test_concession_rates_read_csv_text_values():
+    rows = [{"debater_thinking": "high", "assigned_correct": "False", "complete": "True", "auto_verdict": "defends"},
+            {"debater_thinking": "high", "assigned_correct": "True", "complete": "True", "auto_verdict": "concedes"}]
+    assert pilot.concession_rates(rows)["high"]["wrong_side_arguments"] == 1
+
+
+@pytest.mark.parametrize("cond,needed,capped,flag", [(9.0, 9, 9, False), (15.0, 15, 15, False), (16.4, 17, 15, True),
+                                                     (40.0, 39, 15, True)])
+def test_vote_cap(cond, needed, capped, flag):
+    assert pilot.votes_needed(cond, 1.0) == needed
+    assert pilot.suggested_votes(cond, 1.0) == capped
+    assert pilot.vote_cap_exceeded(cond, 1.0) is flag
+
+
+def _labelled_rows(labels, auto="defends"):
+    rows = []
+    for level in ("low", "high"):
+        for i, lab in enumerate(labels):
+            rows.append({"pair_id": f"p{i}", "debater_thinking": level, "side": "B", "assigned_correct": "False",
+                         "complete": "True", "auto_verdict": auto, "hand_label": lab})
+        rows.append({"pair_id": "right", "debater_thinking": level, "side": "A", "assigned_correct": "True",
+                     "complete": "True", "auto_verdict": "defends", "hand_label": ""})  # right side needs no label
+    return rows
+
+
+SUMMARY = {"go_no_go": {"rule": "r", "thinking_beats_weak": True, "thinking_minus_weak": "+18.5"}}
+
+
+def test_decide_go_with_hand_labels():
+    final = pilot.decide(SUMMARY, _labelled_rows(["defends"] * 9 + ["concedes"]))
+    assert final["decision"].startswith("GO")
+    assert final["concession_hand"]["low"]["rate"] == pytest.approx(0.1)
+    assert final["hand_vs_auto_agreement"]["agree"] == 18 and final["hand_vs_auto_agreement"]["of"] == 20
+    assert len(final["hand_vs_auto_agreement"]["disagreements"]) == 2
+
+
+def test_decide_no_go_when_hand_labels_show_concessions():
+    final = pilot.decide(SUMMARY, _labelled_rows(["concedes"] * 3 + ["defends"] * 7))
+    assert final["decision"].startswith("NO-GO") and final["concessions_ok_hand"] is False
+
+
+def test_decide_no_go_when_thinking_judge_is_not_better():
+    final = pilot.decide({"go_no_go": {**SUMMARY["go_no_go"], "thinking_beats_weak": False}},
+                         _labelled_rows(["defends"] * 10))
+    assert final["decision"].startswith("NO-GO")
+
+
+@pytest.mark.parametrize("bad", ["", "yes", "conceded"])
+def test_decide_refuses_missing_or_unknown_labels(bad):
+    with pytest.raises(ValueError, match="hand_label"):
+        pilot.decide(SUMMARY, _labelled_rows(["defends"] * 9 + [bad]))
+
+
+def test_decide_accepts_label_case_and_spaces():
+    assert pilot.decide(SUMMARY, _labelled_rows([" Defends "] * 10))["decision"].startswith("GO")
+
+
+def test_decide_reads_the_csv_written_by_write_outputs(tmp_path):
+    pairs = make_pairs(30)
+    result = pilot.run_stage("pilot", pairs, chat_fn=FakeChat(), workers=4, progress=lambda s: None)
+    pilot.write_outputs(result, tmp_path)
+    rows = pilot.read_concession_csv(tmp_path / "concession_review.csv")
+    with pytest.raises(ValueError):  # unlabelled
+        pilot.decide(result["summary"], rows)
+    for r in rows:
+        r["hand_label"] = "defends"
+    assert pilot.decide(result["summary"], rows)["decision"].startswith("GO")
+
+
+# ---- freeze check, on a throwaway git repository ----
+
+
+def _git(repo, *args):
+    import subprocess
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *args], cwd=repo, check=True,
+                   capture_output=True)
+
+
+@pytest.fixture
+def repo(tmp_path):
+    for f in pilot.FROZEN_FILES + ("docs/NOTES.md",):
+        p = tmp_path / f
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("v1\n", encoding="utf-8")
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-q", "-m", "init")
+    return tmp_path
+
+
+def test_freeze_requires_the_named_tag(repo):
+    _git(repo, "tag", "some-other-tag")
+    g = pilot.git_state(repo)
+    assert g["tag_exists"] is False and g["frozen"] is False
+
+
+def test_frozen_when_tagged(repo):
+    _git(repo, "tag", "prompts-v1")
+    assert pilot.git_state(repo)["frozen"] is True
+
+
+def test_later_commits_to_other_files_stay_frozen(repo):
+    _git(repo, "tag", "prompts-v1")
+    (repo / "docs/NOTES.md").write_text("results\n", encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "notes")
+    g = pilot.git_state(repo)
+    assert g["frozen"] is True and g["commit"] != g["tag_commit"]
+
+
+@pytest.mark.parametrize("f", pilot.FROZEN_FILES)
+def test_committed_change_to_a_frozen_file_unfreezes(repo, f):
+    _git(repo, "tag", "prompts-v1")
+    (repo / f).write_text("v2\n", encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "change")
+    g = pilot.git_state(repo)
+    assert g["frozen_files_same_as_tag"] is False and g["frozen"] is False
+
+
+def test_uncommitted_change_to_a_frozen_file_unfreezes(repo):
+    _git(repo, "tag", "prompts-v1")
+    (repo / "src/debate_judge/judge.py").write_text("edited\n", encoding="utf-8")
+    g = pilot.git_state(repo)
+    assert g["frozen_files_uncommitted_changes"] is True and g["frozen"] is False

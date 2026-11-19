@@ -1,0 +1,171 @@
+{
+  "stage": "pilot",
+  "pairs": 200,
+  "debate_pairs": 30,
+  "prompt_versions": {
+    "judge": "judge-v1",
+    "debater": "debater-v1",
+    "concession": "concession-v1"
+  },
+  "conditions": {
+    "judge_none": {
+      "n": 200,
+      "accuracy": "71.0 [64.4, 76.8] (n=200)",
+      "outcomes": {
+        "both_right": 140,
+        "both_wrong": 18,
+        "split": 40,
+        "partial_right": 2
+      },
+      "incomplete_calls": 2,
+      "unparsed_verdicts": 0,
+      "cost_usd": 0.106457,
+      "cost_match_per_pair_incl_debaters": 0.000558,
+      "suggested_votes_per_order": null
+    },
+    "judge_low": {
+      "n": 200,
+      "accuracy": "89.0 [83.9, 92.6] (n=200)",
+      "outcomes": {
+        "both_right": 177,
+        "split": 8,
+        "both_wrong": 14,
+        "partial_right": 1
+      },
+      "incomplete_calls": 1,
+      "unparsed_verdicts": 0,
+      "cost_usd": 0.448563,
+      "cost_match_per_pair_incl_debaters": 0.002273,
+      "suggested_votes_per_order": 5
+    },
+    "judge_high": {
+      "n": 200,
+      "accuracy": "89.5 [84.5, 93.0] (n=200)",
+      "outcomes": {
+        "both_right": 178,
+        "split": 8,
+        "both_wrong": 13,
+        "partial_right": 1
+      },
+      "incomplete_calls": 1,
+      "unparsed_verdicts": 0,
+      "cost_usd": 0.594731,
+      "cost_match_per_pair_incl_debaters": 0.003004,
+      "suggested_votes_per_order": 5
+    },
+    "debate_low": {
+      "n": 30,
+      "accuracy": "80.0 [62.7, 90.5] (n=30)",
+      "outcomes": {
+        "both_right": 24,
+        "both_wrong": 3,
+        "split": 3
+      },
+      "incomplete_calls": 0,
+      "unparsed_verdicts": 0,
+      "cost_usd": 0.011614,
+      "cost_match_per_pair_incl_debaters": 0.003444,
+      "suggested_votes_per_order": 7
+    },
+    "debate_high": {
+      "n": 30,
+      "accuracy": "93.3 [78.7, 98.2] (n=30)",
+      "outcomes": {
+        "both_right": 28,
+        "both_wrong": 1,
+        "split": 1
+      },
+      "incomplete_calls": 0,
+      "unparsed_verdicts": 0,
+      "cost_usd": 0.011568,
+      "cost_match_per_pair_incl_debaters": 0.004996,
+      "suggested_votes_per_order": 9
+    },
+    "one_sided": {
+      "n": 30,
+      "accuracy": "80.0 [62.7, 90.5] (n=30)",
+      "outcomes": {
+        "both_right": 24,
+        "both_wrong": 3,
+        "split": 3
+      },
+      "incomplete_calls": 0,
+      "unparsed_verdicts": 0,
+      "cost_usd": 0.009042,
+      "cost_match_per_pair_incl_debaters": 0.002774,
+      "suggested_votes_per_order": 5
+    }
+  },
+  "debater_cost_match_per_pair": {
+    "low": 0.002712,
+    "high": 0.004255
+  },
+  "debater_incomplete": {
+    "low": 0,
+    "high": 0
+  },
+  "debater_letter_fixes": {
+    "low": 0,
+    "high": 1
+  },
+  "paired_vs_weak_judge": {
+    "judge_low": "+18.0 points [+11.6, +24.5], McNemar p=1.01e-07 (n=200, only A right 6, only B right 42)",
+    "judge_high": "+18.5 points [+12.0, +25.0], McNemar p=5.73e-08 (n=200, only A right 6, only B right 43)",
+    "debate_low": "+13.3 points [-5.9, +31.5], McNemar p=0.289 (n=30, only A right 2, only B right 6)",
+    "debate_high": "+26.7 points [+6.3, +45.2], McNemar p=0.0215 (n=30, only A right 1, only B right 9)",
+    "one_sided": "+13.3 points [-5.9, +31.5], McNemar p=0.289 (n=30, only A right 2, only B right 6)"
+  },
+  "by_group_thinking_vs_weak": {
+    "all": "+18.5 points [+12.0, +25.0], McNemar p=5.73e-08 (n=200, only A right 6, only B right 43)",
+    "knowledge": "+13.0 points [+4.1, +21.9], McNemar p=0.0072 (n=100, only A right 4, only B right 17)",
+    "rmc": "+24.0 points [+14.4, +33.7], McNemar p=3.03e-06 (n=100, only A right 2, only B right 26)"
+  },
+  "concession_auto": {
+    "high": {
+      "wrong_side_arguments": 30,
+      "concedes": 0,
+      "unclear": 0,
+      "incomplete_excluded": 0,
+      "rate": 0.0
+    },
+    "low": {
+      "wrong_side_arguments": 30,
+      "concedes": 0,
+      "unclear": 0,
+      "incomplete_excluded": 0,
+      "rate": 0.0
+    }
+  },
+  "go_no_go": {
+    "rule": "thinking judge (high) beats weak judge with paired 95% interval above zero, and wrong-side concession rate < 20% at every debater effort",
+    "thinking_beats_weak": true,
+    "thinking_minus_weak": "+18.5 points [+12.0, +25.0], McNemar p=5.73e-08 (n=200, only A right 6, only B right 43)",
+    "concessions_ok_auto": true,
+    "decision_auto": "GO (question 6)",
+    "note": "Not final: fill hand_label in concession_review.csv, then run `python scripts/run_pilot.py decide`."
+  },
+  "spend_usd": 1.399337,
+  "git": {
+    "commit": "5509a74",
+    "prompts_modified": false,
+    "tags_at_head": [
+      "prompts-v1"
+    ]
+  },
+  "started_utc": "2026-11-19T05:00:55.942556+00:00",
+  "vote_cap_per_order": 15,
+  "conditions_over_vote_cap": {},
+  "freeze_check_post_hoc": {
+    "note": "Added 2026-11-19 after Adrian's PR #12 review; the pilot ran before the stricter check existed.",
+    "freeze_tag": "prompts-v1",
+    "tag_commit": "5509a74",
+    "pilot_commit": "5509a74",
+    "frozen_files": [
+      "src/debate_judge/prompts.py",
+      "src/debate_judge/judge.py",
+      "src/debate_judge/debate.py"
+    ],
+    "frozen_files_same_as_tag": true,
+    "frozen": true
+  }
+}

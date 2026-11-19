@@ -1,0 +1,63 @@
+{
+ "key": "34c68353fcdfa941bf7e6dc027c45956e5864f6fe29788963cc20f471c61281b",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nTakahashi has decided to give one gift to Aoki and one gift to Snuke.\r\nThere are N candidates of gifts for Aoki,\r\nand their values are A_1, A_2, \\ldots,A_N.\r\nThere are M candidates of gifts for Snuke,\r\nand their values are B_1, B_2, \\ldots,B_M.  \nTakahashi wants to choose gifts so that the difference in values of the two gifts is at most D.\nDetermine if he can choose such a pair of gifts.  If he can, print the maximum sum of values of the chosen gifts.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN M D\r\nA_1 A_2 \\ldots A_N\r\nB_1 B_2 \\ldots B_M\n\nOutput\n\nIf he can choose gifts to satisfy the condition,\r\nprint the maximum sum of values of the chosen gifts.\r\nIf he cannot satisfy the condition, print -1.\n\nConstraints\n\n\n- 1\\leq N,M\\leq 2\\times 10^5\n- 1\\leq A_i,B_i\\leq 10^{18}\n- 0\\leq D \\leq 10^{18}\n- All values in the input are integers.\n\nSample Input 1\n\n2 3 2\r\n3 10\r\n2 5 15\n\nSample Output 1\n\n8\r\n\nThe difference of values of the two gifts should be at most 2.\r\nIf he gives a gift with value 3 to Aoki and another with value 5 to Snuke, the condition is satisfied, achieving the maximum possible sum of values.\r\nThus, 3+5=8 should be printed.\n\nSample Input 2\n\n3 3 0\r\n1 3 3\r\n6 2 7\n\nSample Output 2\n\n-1\r\n\nHe cannot choose gifts to satisfy the condition.\r\nNote that the candidates of gifts for a person may contain multiple gifts with the same value.\n\nSample Input 3\n\n1 1 1000000000000000000\r\n1000000000000000000\r\n1000000000000000000\n\nSample Output 3\n\n2000000000000000000\r\n\nNote that the answer may not fit into a 32-bit integer type.\n\nSample Input 4\n\n8 6 1\r\n2 5 6 5 2 1 7 9\r\n7 2 5 5 2 4\n\nSample Output 4\n\n14\n\n# Response A\n\n# YOUR CODE HERE\ndef find_max_sum(N, M, D, A, B):\n    A.sort()\n    B.sort()\n    \n    max_sum = -1\n    j = 0\n    \n    for a in A:\n        while j < M and B[j] < a - D:\n            j += 1\n        if j < M and B[j] <= a + D:\n            max_sum = max(max_sum, a + B[j])\n    \n    return max_sum\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nN = int(data[0])\nM = int(data[1])\nD = int(data[2])\nA = list(map(int, data[3:3+N]))\nB = list(map(int, data[3+N:]))\n\nprint(find_max_sum(N, M, D, A, B))\n\n# Response B\n\n# YOUR CODE HERE\ndef find_max_sum(N, M, D, A, B):\n    A.sort()\n    B.sort()\n    \n    max_sum = -1\n    j = 0\n    \n    for a in A:\n        while j < M and B[j] <= a + D:\n            if abs(a - B[j]) <= D:\n                max_sum = max(max_sum, a + B[j])\n            j += 1\n        if j > 0:\n            j -= 1\n    \n    return max_sum\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nN = int(data[0])\nM = int(data[1])\nD = int(data[2])\nA = list(map(int, data[3:3+N]))\nB = list(map(int, data[3+N:]))\n\nprint(find_max_sum(N, M, D, A, B))\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 32000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "high",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\":\"Response A is incorrect because for each A it only checks the smallest B that meets the lower bound, not the largest valid B, so it can miss the maximum sum. Response B correctly uses sorting and a monotonic pointer to consider newly valid B values as A increases, checking the absolute difference and maximizing the sum. Therefore, Response B is correct.\",\"winner\":\"B\"}",
+  "reasoning": "We need answer judge. Need determine correct response. Need reason. We need compare algorithms.\n\nProblem: choose a in A, b in B with |a-b|<=D maximize a+b. N,M up to 2e5, values large. Need correct.\n\nResponse A: sort both. For each a (ascending), j pointer nondecreasing initially 0. While j<M and B[j] < a-D: j++. Then if j<M and B[j] <= a+D: max_sum=max(max_sum, a+B[j]). Is B[j] the largest valid b for this a? Since sorted and j first b >= a-D. Condition b <= a+D. The maximum b satisfying <=a+D may be much larger than B[j], not just B[j]. A picks smallest valid b for each a, maximizing sum requires largest valid b. Does it still work? For each a, candidate valid b interval. To maximize a+b, choose largest B <= a+D and >= a-D. A only considers lower-bound first. Could miss. Example A=[0? values positive], B=[1,100], D=0? a=1, j first >=1 = B[0]=1, max sum 2, but B[1]=100 invalid maybe. Need valid interval with multiple B. Example A=[5], B=[1,5,9], D=4. j first >=1 is 1 <=9, sum6, but valid 5 gives10, 9 gives14. A returns6, wrong. However because A values positive, choose a=5, b=9 diff4 sum14. A would j starts 0, while B[j]<1? B0=1 not <1, then B[j]=1<=9, max 6. Incorrect.\n\nResponse B: sort. j=0. For each a ascending:\nwhile j<M and B[j] <= a + D:\n  if abs(a-B[j])<=D: max\n  j++\nif j>0: j--\nreturn max.\n\nNeed inspect. It scans B up to a+D, and checks abs. But j is decremented after each a, not reset. Since a increasing, a+D increases, so monotonic upper bound. It should consider newly eligible B. Does it consider all B <= a+D? j points next B not yet processed? Let's simulate. Initially j=0. For a=first, while B[j]<=a+D process all from index 0 to last <= upper, increment j to first > upper. Then j-- to last processed. Next a larger: start j at last processed (already checked for previous a maybe invalid due lower bound). while B[j] <= a+D: process j (rechecking last processed) then increment. It processes newly eligible up to new upper, and rechecks boundary. Does it process B below current j that were not valid before but may become valid now? Since a increases, lower bound a-D increases, so B below a-D may have been invalid due being <a-D, and as a increases they remain < a-D? Wait condition abs <= D equivalent a-D <= b <= a+D. As a increases, lower bound increases, so a B that was too small (b < a-D) stays too small for larger a. B that was too large (b > a+D) may become valid as upper increases. So only need process newly included larger Bs. It starts j at last processed (largest <= previous upper). It will process new Bs above previous upper. It also rechecks last processed (which might now be too small or valid). But what about Bs below last processed that were too large at some earlier stage? Can't be: if below previous upper, they were processed. If invalid at previous a due b > a+D? But b <= previous upper so not too large. They could be too small? For future a lower bound increases, no. Thus okay. Let's test example A=[5], B=[1,5,9], D=4: j0, upper9, processes 1 abs4 yes sum6; 5 sum10;9 sum14; j=3, then j--=2. return14 correct.\n\nBut Response B code maybe bug with j decrement and while condition when j==M. Suppose j reaches M, then j-- M-1. Next a: while j<M and B[j]<=a+D. It starts at M-1, which was last B processed. Could process it again, increment to M, loops ends. Fine. If j>0 decrement. If M=0? M>=1. Fine. However, there is subtlety: After processing, j-- returns to last processed. On next a, while B[j] <= a+D. If B[j] (last processed) is <= new upper, it processes it again; okay. But if new a+D is less than B[j]? Since a increases, upper nondecreasing, cannot be less. It will process and then j++ to M, then end. All new values? Wait if previous upper equal same, j after decrement is last processed index k. New upper same, B[k] <= upper, process k, j=k+1. If k+1 maybe > upper? Since k was last <= previous upper. New upper same, no new. It stops. So extra recheck. It doesn't process indices > k because j=k+1 and if B[k+1] > upper, while condition false. Good.\n\nPotential issue if j=0 and M? It processes all <= upper. If no B <= upper, j remains 0. j>0 false. For next a upper larger, process from 0. Good.\n\nThus B seems correct. Need determine winner B.\n\nNeed provide JSON only. Need include reasoning at most 100 words. Let's craft concise.\n\nNeed maybe mention A incorrect due selecting smallest valid B instead of maximum; B scans monotonic and considers new B values. Final exactly {\"reasoning\": \"...\", \"winner\": \"B\"}. Ensure JSON valid.",
+  "finish_reason": "stop",
+  "prompt_tokens": 1050,
+  "cache_hit_tokens": 512,
+  "completion_tokens": 1352,
+  "reasoning_tokens": 1272,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 1352,
+   "prompt_tokens": 1050,
+   "total_tokens": 2402,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 1272,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 512,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 512,
+   "prompt_cache_miss_tokens": 538
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-19T05:07:12.121024+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.000893436,
+ "latency_s": 9.89
+}

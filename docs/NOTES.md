@@ -6,6 +6,26 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-19:** Varun made the fixes from Adrian's post-merge reviews of PR #11 and PR #12 (Adrian asked for #12's before the pilot;
+  they landed just after it, and none of them changes a pilot number). SciPy-only tests skip without SciPy, the rest run.
+  The freeze check now needs tag `prompts-v1` and `prompts.py`, `judge.py`, `debate.py` identical to it with no uncommitted
+  changes, so later commits to other files no longer block runs. `python scripts/run_pilot.py decide` reads the hand labels and writes
+  `go_no_go_final`. Votes are capped at 15 per order with conditions over the cap flagged. Incomplete arguments leave the concession
+  denominator. Checked on the pilot without API calls: concessions still 0/30 and 0/30 (no incomplete arguments), largest k 9,
+  and the pilot ran on `5509a74` = the tag, so it passes the stricter check (recorded as `freeze_check_post_hoc`). 166 tests pass.
+- **2026-11-19:** **Pilot done: automatic decision GO (question 6)**, pending Adrian's hand labels of the 60 wrong-side arguments.
+  Prompts frozen as tag `prompts-v1` on `5509a74`; pilot run 13:01–13:24 UTC+8, off-peak (it was set for 12:00, but the PC slept), US$1.40.
+  On the 200 pilot pairs: weak judge (thinking off) 71.0 [64.4, 76.8]; thinking `low` 89.0 [83.9, 92.6]; thinking `high` 89.5 [84.5, 93.0].
+  **Thinking `high` minus weak: +18.5 points [+12.0, +25.0]**, McNemar p = 6e-8, so the weak-judge premise holds.
+  H3 sign already: the gap is +24.0 [+14.4, +33.7] on reasoning/math/coding and +13.0 [+4.1, +21.9] on knowledge.
+  Weak judge splits (same position in both orders) on 40/200 pairs, against 8/200 for the thinking judge.
+  On the 30 debate pairs (too few to conclude; full run needed): weak judge with debate `high` 93.3 (+26.7 [+6.3, +45.2] over the weak judge alone),
+  debate `low` 80.0 (+13.3, interval includes 0), one-sided 80.0.
+  Automatic concession check: 0 of 30 wrong-side arguments concede at `low` and at `high`; 1 "Response A/B" rewrite in 120 arguments.
+  4 of 1,600 judge calls were incomplete (2 weak judge cut at 1,000 tokens, 1 `low` at 16,000, 1 `high` blank); they count as missing verdicts.
+  Measured cost per pair (`cost_match_usd`, both orders, incl. arguments): weak 0.00056, thinking low 0.00227, high 0.00300,
+  debate low 0.00344, debate high 0.00500, one-sided 0.00277; suggested votes per order 5, 5, 7, 9, 5.
+  Balance after the pilot: US$8.50. Outputs `results/pilot/`, logs `logs/calls/pilot_*.jsonl`.
 - **2026-11-19:** Adrian made the fixes from his PR #8 review, which was merged before they were made (branch `adrian/data-fixes`):
   `summarize()` no longer counts knowledge pairs twice (group keys are now `group:knowledge` and `group:rmc`); the pilot is
   balanced by response author (gpt or claude) as well as category; the 20 dry-run pairs are unchanged, so the dry run stays valid
@@ -82,21 +102,34 @@ Put the newest entries first in each section.
 - [x] Evaluation lead (Varun): JudgeBench loader and both-order scoring (`data.py`, branch `varun/judgebench-loader`).
 - [x] Evaluation lead (Varun): `stats.py` (branch `varun/stats`).
 - [x] Evaluation lead (Varun): pilot runner and the real dry run (branch `varun/pilot-runner`).
-- [ ] Both: freeze the prompts (`git tag prompts-v1 && git push origin prompts-v1`) once #11 and the runner PR are merged.
-- [ ] Varun: run the 200-pair pilot off-peak (`python scripts/run_pilot.py pilot`, about US$1.50–2).
-- [ ] Adrian: fill `hand_label` for the 60 wrong-side rows in `results/pilot/concession_review.csv`; then both decide go/no-go.
-- [ ] Evaluation lead (Varun): vote baseline and cost matching (after the pilot's costs are known).
-- [ ] Both: decide who tops up for the full runs; Varun's balance (about US$9.84) covers the pilot only.
+- [x] Both: freeze the prompts (tag `prompts-v1` on `5509a74`, pushed 2026-11-19).
+- [x] Varun: run the 200-pair pilot off-peak (2026-11-19, US$1.40; automatic decision GO).
+- [x] Varun: fixes from Adrian's post-merge reviews of PR #11 (SciPy-only skip) and PR #12 (strict freeze check, `decide` step,
+  vote cap 15, concession denominator), branch `varun/pilot-results`.
+- [ ] Adrian: fill `hand_label` (`defends`, `concedes` or `unclear`) for the 60 wrong-side rows (`assigned_correct` = False) in
+  `results/pilot/concession_review.csv`; then run `python scripts/run_pilot.py decide` (free), commit, and both record the decision.
+- [ ] Evaluation lead (Varun): vote baseline and the full-run script with cost matching (pilot costs are in `results/pilot/summary.json`).
+- [ ] Both: top up before the full runs. Balance US$8.50; the full runs on the 600 report pairs are estimated at about US$10.20 at
+  list price from the pilot's costs (debates 4.81, votes up to 9 per order 2.69, thinking judge 2.11, one-sided 0.37, weak 0.22),
+  so top up at least US$5 for headroom. `max`-effort debaters are not included.
+- [ ] Both: add the pilot result line to `report/proposal.md`.
 - [x] Method lead (Adrian): judge prompt and `judge_pair()` (branch `adrian/judge`).
 - [x] Dry-run the judge and debaters with the real API on `dry_run_pairs()` (done by Varun with the runner, 2026-11-18).
 - [x] Method lead (Adrian): debater prompt, one-round debate and one-sided argument (`debate.py`, PR #10).
 
 ## For the report
 
+- **Primary test (Adrian's PR #11 review):** H1, the weak judge after a debate against the weak judge with votes at the same cost,
+  on the 600 report pairs, is the one primary test. Every other comparison (by group, by category, against the thinking judge,
+  one-sided, debater effort) is exploratory, with no correction for multiple comparisons; say so in Method and Limitations.
 - **Limitations:** JudgeBench has been public since 2024, so `deepseek-flash` may have seen its questions and responses in training.
 - **Limitations:** the 200 pilot pairs decide go/no-go and are also part of the 600 reported pairs (to save money).
   Say so, and also report results on the 400 non-pilot pairs as a check; that is a slice of the same run and costs nothing.
 - **Method:** the judge is told in every condition that exactly one response is correct (true of every JudgeBench pair). Varun's PR #6 review.
+- **Results/limitations:** the go/no-go used the pilot pairs, which are also reported; report the 400 non-pilot pairs as a check.
+  About 0.25% of judge calls (4 of 1,600 in the pilot) were incomplete and count as missing verdicts; say so.
+- **Analysis idea:** the weak judge picks the same position in both orders on 20% of pilot pairs (thinking judge 4%); position bias
+  is one way debate could help the weak judge, so compare split rates across conditions.
 - **Method:** one round only. Debaters do not see or rebut each other's arguments; the second round was dropped for time.
 - **Method:** the one-sided condition reuses one of the two `high` debate arguments, so it differs from the debate only in
   whether the judge sees the second argument.
@@ -120,15 +153,22 @@ Put the newest entries first in each section.
 
 | Date | Who | Run | Dataset and number of questions | Cost (US$) | Total so far (US$) |
 |---|---|---|---|---|---|
+| 2026-11-19 | Varun | `run_pilot.py pilot` (go/no-go pilot, off-peak, tag prompts-v1, commit 5509a74) | JudgeBench pilot pairs, 200 (debaters on 30) | 1.3993 | 1.5480 |
 | 2026-11-18 | Varun | `run_pilot.py dry` (prompt dry run, off-peak, commit adf143e) | JudgeBench dry-run pairs, 20 (debaters on 5) | 0.1485 | 0.1487 |
 | 2026-11-16 | Varun | `check_model` (setup check, 6 tiny calls, all thinking levels, peak hours) | none; one arithmetic question | 0.0002 | 0.0002 |
 
-Account balances: Varun US$10.00 topped up (2026-11-16).
+Account balances: Varun US$10.00 topped up (2026-11-16); US$8.50 left after the pilot (DeepSeek balance API, 2026-11-19).
 
 ## Experiment log
 
 <!-- One entry per run: date, who, git commit, settings, accuracy, cost, notes. -->
 
+- **2026-11-19, Varun, pilot, tag `prompts-v1` = commit 5509a74 (judge-v1, debater-v1, concession-v1).** 200 pilot pairs
+  (100 knowledge, 48 reasoning, 29 math, 23 coding; 112 gpt, 88 claude). Weak judge: thinking off, temperature 1.0, max_tokens 1000.
+  Thinking judge: `low` (16000) and `high` (32000). Debaters `low` and `high` on the first 30 pilot pairs, both sides;
+  weak judge reading each debate and the one-sided argument. Seed: subsets `SUBSET_SEED` 20261117, one-sided `one-sided-v1`.
+  Accuracy: weak 71.0, low 89.0, high 89.5 (n=200); debate low 80.0, debate high 93.3, one-sided 80.0 (n=30).
+  Go/no-go: high minus weak +18.5 [+12.0, +25.0]; automatic concessions 0/30 and 0/30. Spend US$1.3993. Full numbers in `results/pilot/summary.json`.
 - **2026-11-18, Varun, dry run, commit adf143e (prompts judge-v1, debater-v1, concession-v1).** 20 dry-run pairs; weak judge
   thinking off, temperature 1.0, max_tokens 1000; thinking judge `low` (16000) and `high` (32000); debaters `low` and `high` on 5 pairs,
   both sides. Accuracy (not reported; n too small): weak 60.0, low 70.0, high 70.0; debate low 4/5, debate high 5/5, one-sided 5/5.
@@ -140,6 +180,8 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-19 | Varun | Fixed Adrian's PR #11 and #12 review points; 22 new tests | Claude Code made the fixes; freeze-check tests run against a throwaway git repo; the SciPy fix was checked by running the suite with SciPy made unimportable (11 SciPy tests skip, 155 run); the new rules were applied to the committed pilot files without API calls and changed no number. What went wrong: #11 and #12 were merged before Adrian reviewed them, and the pilot ran before his #12 fixes; from now on PRs wait for review |
+| 2026-11-19 | Varun | Reviewed and merged PR #13; tagged the prompts; ran the pilot | Claude Code ran the full suite on main + #13 (144 pass, real-data tests included), then scheduled the tag and pilot for the off-peak window; checked the logs for the API key before committing (none; one "Risk-free" false positive) |
 | 2026-11-19 | Adrian | Fixes from the PR #8 review (`data.py`) and 6 new tests | Claude Code made them; it checked on synthetic data that the dry-run pairs and the 600 reported pairs are unchanged and only the pilot changes; real-data tests compare the dry-run pairs with the committed dry-run logs (run once `datasets` is installed) |
 | 2026-11-18 | Varun | Pilot runner (`pilot.py`, `run_pilot.py`), 10 tests, real dry run | Claude Code wrote them; an end-to-end test with a fake API caught one bug (wrong argument passed to `one_sided_arguments`) before any money was spent; then the real 20-pair dry run, with two wrong-side arguments read by hand |
 | 2026-11-17 | Adrian | Debater prompt, `debate.py`, concession check and 27 tests (PR #10) | Claude Code wrote them; tests use a fake `chat()` (80 pass); a test checks that one argument reads correctly in both answer orders; Varun's dry run then checked them on real pairs |

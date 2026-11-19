@@ -1,0 +1,63 @@
+{
+ "key": "df4fdebd6ce8194f50dad58dc25c9907b4a73d6e4cb9be3fbd14465ced322dc8",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nTakahashi has decided to give one gift to Aoki and one gift to Snuke.\r\nThere are N candidates of gifts for Aoki,\r\nand their values are A_1, A_2, \\ldots,A_N.\r\nThere are M candidates of gifts for Snuke,\r\nand their values are B_1, B_2, \\ldots,B_M.  \nTakahashi wants to choose gifts so that the difference in values of the two gifts is at most D.\nDetermine if he can choose such a pair of gifts.  If he can, print the maximum sum of values of the chosen gifts.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN M D\r\nA_1 A_2 \\ldots A_N\r\nB_1 B_2 \\ldots B_M\n\nOutput\n\nIf he can choose gifts to satisfy the condition,\r\nprint the maximum sum of values of the chosen gifts.\r\nIf he cannot satisfy the condition, print -1.\n\nConstraints\n\n\n- 1\\leq N,M\\leq 2\\times 10^5\n- 1\\leq A_i,B_i\\leq 10^{18}\n- 0\\leq D \\leq 10^{18}\n- All values in the input are integers.\n\nSample Input 1\n\n2 3 2\r\n3 10\r\n2 5 15\n\nSample Output 1\n\n8\r\n\nThe difference of values of the two gifts should be at most 2.\r\nIf he gives a gift with value 3 to Aoki and another with value 5 to Snuke, the condition is satisfied, achieving the maximum possible sum of values.\r\nThus, 3+5=8 should be printed.\n\nSample Input 2\n\n3 3 0\r\n1 3 3\r\n6 2 7\n\nSample Output 2\n\n-1\r\n\nHe cannot choose gifts to satisfy the condition.\r\nNote that the candidates of gifts for a person may contain multiple gifts with the same value.\n\nSample Input 3\n\n1 1 1000000000000000000\r\n1000000000000000000\r\n1000000000000000000\n\nSample Output 3\n\n2000000000000000000\r\n\nNote that the answer may not fit into a 32-bit integer type.\n\nSample Input 4\n\n8 6 1\r\n2 5 6 5 2 1 7 9\r\n7 2 5 5 2 4\n\nSample Output 4\n\n14\n\n# Response A\n\n# YOUR CODE HERE\ndef find_max_sum(N, M, D, A, B):\n    A.sort()\n    B.sort()\n    \n    max_sum = -1\n    j = 0\n    \n    for a in A:\n        while j < M and B[j] <= a + D:\n            if abs(a - B[j]) <= D:\n                max_sum = max(max_sum, a + B[j])\n            j += 1\n        if j > 0:\n            j -= 1\n    \n    return max_sum\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nN = int(data[0])\nM = int(data[1])\nD = int(data[2])\nA = list(map(int, data[3:3+N]))\nB = list(map(int, data[3+N:]))\n\nprint(find_max_sum(N, M, D, A, B))\n\n# Response B\n\n# YOUR CODE HERE\ndef find_max_sum(N, M, D, A, B):\n    A.sort()\n    B.sort()\n    \n    max_sum = -1\n    j = 0\n    \n    for a in A:\n        while j < M and B[j] < a - D:\n            j += 1\n        if j < M and B[j] <= a + D:\n            max_sum = max(max_sum, a + B[j])\n    \n    return max_sum\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nN = int(data[0])\nM = int(data[1])\nD = int(data[2])\nA = list(map(int, data[3:3+N]))\nB = list(map(int, data[3+N:]))\n\nprint(find_max_sum(N, M, D, A, B))\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 16000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "low",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\": \"Response A correctly checks all potentially valid B values for each A using sorted two pointers, including the largest B within a+D, so it can find the maximum sum. Response B only checks the smallest B >= a-D for each a, which can miss a larger valid B and thus produce a non-maximal sum (e.g., A=[10], B=[9,10], D=2). Therefore A is correct.\", \"winner\": \"A\"}",
+  "reasoning": "We need answer judge. Need decide correctness. Need inspect algorithms.\n\nProblem: maximize a+b subject |a-b|<=D. Given sorted A,B. Standard two pointers or binary search. Need evaluate response A and B.\n\nResponse B:\nsort. j=0. For each a in A ascending:\n while j<M and B[j] < a-D: j++\n if j<M and B[j] <= a+D: max=max(a+B[j])\nReturn max.\n\nDoes this find max? For each a, candidate B values satisfying B >= a-D and B <= a+D. Among valid B for this a, maximum sum with same a is largest valid B <= a+D, not necessarily B[j] (smallest >= a-D). The code only checks B[j]. Is that sufficient globally? Maybe because a increasing, j nondecreasing; but for a fixed a, a+B[j] may not be max. Could miss better pair with larger B for same a. Example A=[10], B=[0,9], D=2. valid B=9 only (0 invalid). j starts 0, while B[0]<8 -> j=1, B[1]=9<=12, ok. Fine. If B=[9,10], D=2: j=0 B0=9 >=8, check 9+10=19, but max with a=10 is 20 with B=10. B algorithm returns 19, misses. But perhaps a earlier? If only one A. So B incorrect.\n\nResponse A:\nsort. j=0. for a in A:\n while j<M and B[j] <= a+D:\n    if abs(a-B[j]) <= D: max max(a+B[j])\n    j += 1\n if j>0: j -=1\nThis is weird. Let's test same A=[10], B=[9,10], D=2. j=0, while B[0]<=12: check 9 valid max19, j=1; B[1]<=12 check 10 valid max20, j=2; j>0 j=1. return 20. Good.\n\nNeed verify A generally correct? It advances j through B <= a+D, checking abs. It never decrements except by one after loop. Since a increases, a+D increases, so any B with index >=j? Actually j can include B up to current a+D. It checks all B from current j until <=a+D. But it may skip B that are < a-D and invalid for current and future? Since a increasing, lower bound a-D increases, so skipped B won't become valid later. It checks abs for B <=a+D; those < a-D invalid. Then j points after last checked. Then j-=1 to possibly recheck last B next iteration? This seems okay. But need see if it can miss B greater than current a+D for current a no, invalid because > a+D (B > a+D means B-a>D). Future a increases, upper bound increases, so can include later when j reaches. But j after loop is index after last B <= a+D. It decrements by 1, so next iteration starts at last included B. That B might be <= new a+D; check again. Then loop moves on. This covers all B up to each a+D. It checks all pairs where B<=a+D and abs<=D, i.e., valid. Since it loops all A and as upper bound increases, each B is checked when its <= current a+D, and recheck one. It will check every B for each a? Not all, but for each B, when first becomes <= some a+D, it checks with that a; if B < a-D invalid; but for later a maybe valid and j? Need examine if a B that is too small for current a (B < a-D) was checked and then j advanced past it. For future a, B remains too small (since a-D increases), so not needed. If B is >a+D, not yet checked; j remains before it. Later a higher, B may be <=a+D and then j loop checks. So correct.\n\nPotential issue response A uses while j<M and B[j] <= a+D, then j may reach M. if j>0 j-=1. This means after checking all B up to a+D, next a starts at last B checked, okay. It may check same B multiple times, O(N+M?) Each iteration can decrement then while may advance multiple; total? Could be O(N*M?) Example if each a with no new B, j stays last, while checks same last if <=a+D, then j++? Wait if j at last index m-1 after decrement from M? Let's simulate. Suppose all B <= a+D, loop goes to M, then j=M-1. Next a, while j<M and B[j]<=a2+D (true), check B[M-1], j=M, j-=1 -> M-1. So O(1) per a. If no B advance, each iteration checks at most one? If j at some k and B[k]<=a+D, check and j++ maybe further; if next B >a+D stops. Then j-=1. Next a, same last checked. So total checks O(N+M) plus maybe repeated last per A = O(N). Fine.\n\nNeed compare with known correct algorithm? There is simpler: For each a, find lower_bound(a-D), if <=a+D, maximum B <=a+D; but B's max sum for same a is largest B in range, not smallest. A checks all B in range as they become <=a+D? Let's test a range. Suppose A sorted, B sorted. For a, all valid B satisfy a-D <= B <= a+D. A's j starts at some index, loops through B <=a+D, checking abs. It will check all B from j to upper. But what about valid B with index < j? They were skipped because B < previous a-D? For current a, previous lower bound <= current lower bound, so if B < previous a-D, B < current a-D, invalid. Good. If j was decremented, includes last checked; no skipped valid. Thus it checks all valid B for each a? Actually for a given a, it checks B from j through upper. It doesn't check B below j (invalid). So yes.\n\nThus A correct.\n\nNeed final JSON. Reasoning concise. Winner A. Ensure exact format.",
+  "finish_reason": "stop",
+  "prompt_tokens": 1050,
+  "cache_hit_tokens": 0,
+  "completion_tokens": 1464,
+  "reasoning_tokens": 1367,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 1464,
+   "prompt_tokens": 1050,
+   "total_tokens": 2514,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 1367,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 0,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 0,
+   "prompt_cache_miss_tokens": 1050
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-19T05:02:51.190690+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.0010359000000000002,
+ "latency_s": 17.938
+}
