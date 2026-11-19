@@ -6,6 +6,12 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-19:** Varun built the full-run script (`scripts/run_full.py`, `src/debate_judge/full.py`): the 600 report pairs, in a
+  "shared" group (weak judge, vote baseline k = 1–9, thinking judge low and high; useful for question 6 and question 8) and a
+  "debate" group (debates low and high, one-sided, concession check; refuses without the final GO). Budget check before every
+  condition. Estimate from pilot costs: shared US$5.01, debate US$5.18, total US$10.19; balance US$8.45. 8 new tests (174 pass).
+  PR #14 was merged before Adrian's review, and his 60 hand labels are still to do, so the go/no-go is not final yet.
+  Hugging Face is unreachable from Varun's PC today; `load_judgebench()` falls back to the cached copy of the pinned revision.
 - **2026-11-19:** Varun made the fixes from Adrian's post-merge reviews of PR #11 and PR #12 (Adrian asked for #12's before the pilot;
   they landed just after it, and none of them changes a pilot number). SciPy-only tests skip without SciPy, the rest run.
   The freeze check now needs tag `prompts-v1` and `prompts.py`, `judge.py`, `debate.py` identical to it with no uncommitted
@@ -108,7 +114,10 @@ Put the newest entries first in each section.
   vote cap 15, concession denominator), branch `varun/pilot-results`.
 - [ ] Adrian: fill `hand_label` (`defends`, `concedes` or `unclear`) for the 60 wrong-side rows (`assigned_correct` = False) in
   `results/pilot/concession_review.csv`; then run `python scripts/run_pilot.py decide` (free), commit, and both record the decision.
-- [ ] Evaluation lead (Varun): vote baseline and the full-run script with cost matching (pilot costs are in `results/pilot/summary.json`).
+- [x] Evaluation lead (Varun): vote baseline and the full-run script (`scripts/run_full.py`, branch `varun/full-run`, PR for Adrian).
+- [ ] Varun, Thu after 18:00: `python scripts/run_full.py shared` (about US$5.01; the balance of US$8.45 covers it).
+- [ ] Both: top up before `python scripts/run_full.py debate` (about US$5.18), which also needs the final GO.
+- [ ] Evaluation lead (Varun): `make_table.py` (results table with intervals and the H1 test at matched cost) and the accuracy-vs-cost plot.
 - [ ] Both: top up before the full runs. Balance US$8.50; the full runs on the 600 report pairs are estimated at about US$10.20 at
   list price from the pilot's costs (debates 4.81, votes up to 9 per order 2.69, thinking judge 2.11, one-sided 0.37, weak 0.22),
   so top up at least US$5 for headroom. `max`-effort debaters are not included.
@@ -180,6 +189,7 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-19 | Varun | Full-run script and vote baseline; 8 tests | Claude Code wrote them; tests with a fake API check vote k=1 equals the judge alone, vote costs scale with k, debate and one-sided costs include their arguments, and the budget check stops a run while keeping finished conditions; a test against the NOTES cost figures caught an underestimate of the vote cost (votes 2–9 are new on all 600 pairs, not 400) |
 | 2026-11-19 | Varun | Fixed Adrian's PR #11 and #12 review points; 22 new tests | Claude Code made the fixes; freeze-check tests run against a throwaway git repo; the SciPy fix was checked by running the suite with SciPy made unimportable (11 SciPy tests skip, 155 run); the new rules were applied to the committed pilot files without API calls and changed no number. What went wrong: #11 and #12 were merged before Adrian reviewed them, and the pilot ran before his #12 fixes; from now on PRs wait for review |
 | 2026-11-19 | Varun | Reviewed and merged PR #13; tagged the prompts; ran the pilot | Claude Code ran the full suite on main + #13 (144 pass, real-data tests included), then scheduled the tag and pilot for the off-peak window; checked the logs for the API key before committing (none; one "Risk-free" false positive) |
 | 2026-11-19 | Adrian | Fixes from the PR #8 review (`data.py`) and 6 new tests | Claude Code made them; it checked on synthetic data that the dry-run pairs and the 600 reported pairs are unchanged and only the pilot changes; real-data tests compare the dry-run pairs with the committed dry-run logs (run once `datasets` is installed) |

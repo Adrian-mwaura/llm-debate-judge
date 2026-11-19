@@ -167,6 +167,24 @@ Every change is reviewed by the other member in a pull request before it is merg
   `defends`, `concedes` or `unclear` on every complete wrong-side row of `results/pilot/concession_review.csv`, computes the
   hand-label concession rates and their agreement with the automatic check, and writes `go_no_go_final` into `summary.json`.
 
+## Running the full run (built)
+
+`scripts/run_full.py` with the logic in `src/debate_judge/full.py`; read their docstrings. All on the 600 `report_pairs`.
+
+- `python scripts/run_full.py estimate`: no API calls; cost estimate per condition from the pilot's measured costs, and the balance.
+- `python scripts/run_full.py shared`: weak judge alone, the **vote baseline** (weak judge with `sample=0..8` per order;
+  majority of the first k for k = 1, 3, 5, 7, 9, saved as `votes_k1` … `votes_k9`), thinking judge `low` and `high`.
+  Needed by question 6 and by the question-8 fallback, so it may run before the final go/no-go. About US$5.
+- `python scripts/run_full.py debate`: debate `high` and `low`, one-sided, and the automatic concession check.
+  **Refuses without `go_no_go_final` = GO** (from `run_pilot.py decide`). About US$5.
+- Same freeze and peak checks as the pilot runner, plus a budget check before each condition: it reads the DeepSeek balance and
+  stops if the balance is below the estimate × 1.25. Finished conditions are saved; every call is cached, so just rerun.
+- Output: `results/full/pairs.jsonl`, one record per (pair, condition) with both decisions, `correct`, `outcome`, `first_slot`
+  and `cost_match_usd` (the debater arguments the judge read are included; one-sided includes the one argument it shows),
+  plus `concessions.jsonl` and `run_<group>.json`. Logs: `logs/calls/full_*.jsonl`.
+- **Cost matching for H1:** compare `debate_<level>` with the `votes_k<k>` whose mean `cost_match_usd` per pair is closest
+  (from the pilot: debate `high` ≈ k 9, debate `low` ≈ k 7, one-sided ≈ k 5). `make_table.py` will do this from `pairs.jsonl`.
+
 ## Planned layout
 
 Update this section whenever the layout changes.
@@ -184,7 +202,8 @@ src/debate_judge/
   judge.py        pairwise judge in both answer orders [built] (method lead)
   methods/        our new method                            (method lead)
   pilot.py        dry run and go/no-go pilot logic [built] (evaluation lead)
-scripts/          check_model.py, run_pilot.py [built]; run_baseline.sh, run_method.sh, make_table.py
+  full.py         full run on the 600 report pairs, vote baseline, budget guard [built] (evaluation lead)
+scripts/          check_model.py, run_pilot.py, run_full.py [built]; make_table.py
 logs/             calls/<run>.jsonl call logs and cache/<xx>/<hash>.json (committed)
 results/          tables and plots (committed)
 report/           proposal and report drafts
