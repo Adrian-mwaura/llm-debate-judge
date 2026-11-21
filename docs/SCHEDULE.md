@@ -30,6 +30,7 @@ Tick the boxes as tasks are done, in the same PR as the work or in `docs/NOTES.m
 ### Wed 18 Nov
 
 - [ ] Both, by midday: go/no-go from the pilot (question 6, or switch to question 8); finish the proposal and merge it.
+  *Go/no-go done late, Thu 19: GO for question 6. The proposal is still to finish.*
 - [ ] Adrian: full debate and one-sided runs on all 620 pairs.
 - [ ] Varun: vote baseline, cost matching and thinking-judge runs.
 - [x] Varun: confidence intervals and paired tests (`stats.py`).
