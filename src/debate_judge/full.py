@@ -29,8 +29,10 @@ from debate_judge.debate import arguments_for_judge, check_concession, correct_s
 from debate_judge.judge import judge_pair
 from debate_judge.pilot import WEAK_JUDGE_TEMPERATURE
 
-MAX_VOTE_K = 9                   # largest k the pilot's cost matching needs (debate_high); proposal cap is 15
-VOTE_KS = (1, 3, 5, 7, 9)        # majority of the first k samples per order; k=1 is the weak judge alone
+# The proposal matches each protocol with "the smallest odd k costing at least as much". In the pilot, debate_high cost
+# 8.95 weak verdicts, so k = 9 is only just enough; k = 11 covers a full run that costs a little more. Proposal cap: 15.
+MAX_VOTE_K = 11
+VOTE_KS = (1, 3, 5, 7, 9, 11)    # majority of the first k samples per order; k=1 is the weak judge alone
 SHARED = ("judge_none", "votes", "judge_low", "judge_high")
 DEBATE = ("debate_high", "debate_low", "one_sided")   # debate_high first: one_sided reuses its arguments
 GROUPS = {"shared": SHARED, "debate": DEBATE, "all": SHARED + DEBATE}
@@ -139,6 +141,18 @@ def run_debates(pairs, *, chat_fn: ChatFn, workers: int) -> tuple[list[dict], li
 
     concessions = _parallel(concede, jobs, workers)
     return records, concessions
+
+
+def matched_k(condition_cost_per_pair: float, weak_cost_per_pair: float, ks: Sequence[int] = VOTE_KS) -> int | None:
+    """The proposal's same-cost baseline: the smallest odd k in `ks` whose votes cost at least as much as the condition.
+
+    Both costs are mean cost_match_usd per pair (both orders); k votes cost k weak-judge verdict pairs.
+    Returns None if even the largest k is cheaper than the condition (then more votes are needed).
+    """
+    for k in sorted(ks):
+        if k * weak_cost_per_pair >= condition_cost_per_pair * (1 - 1e-9):
+            return k
+    return None
 
 
 # ---------------------------------------------------------------- budget

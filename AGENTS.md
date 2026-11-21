@@ -172,8 +172,8 @@ Every change is reviewed by the other member in a pull request before it is merg
 `scripts/run_full.py` with the logic in `src/debate_judge/full.py`; read their docstrings. All on the 600 `report_pairs`.
 
 - `python scripts/run_full.py estimate`: no API calls; cost estimate per condition from the pilot's measured costs, and the balance.
-- `python scripts/run_full.py shared`: weak judge alone, the **vote baseline** (weak judge with `sample=0..8` per order;
-  majority of the first k for k = 1, 3, 5, 7, 9, saved as `votes_k1` … `votes_k9`), thinking judge `low` and `high`.
+- `python scripts/run_full.py shared`: weak judge alone, the **vote baseline** (weak judge with `sample=0..10` per order;
+  majority of the first k for k = 1, 3, 5, 7, 9, 11, saved as `votes_k1` … `votes_k11`), thinking judge `low` and `high`.
   Needed by question 6 and by the question-8 fallback, so it may run before the final go/no-go. About US$5.
 - `python scripts/run_full.py debate`: debate `high` and `low`, one-sided, and the automatic concession check.
   **Refuses without `go_no_go_final` = GO** (from `run_pilot.py decide`). About US$5.
@@ -182,8 +182,10 @@ Every change is reviewed by the other member in a pull request before it is merg
 - Output: `results/full/pairs.jsonl`, one record per (pair, condition) with both decisions, `correct`, `outcome`, `first_slot`
   and `cost_match_usd` (the debater arguments the judge read are included; one-sided includes the one argument it shows),
   plus `concessions.jsonl` and `run_<group>.json`. Logs: `logs/calls/full_*.jsonl`.
-- **Cost matching for H1:** compare `debate_<level>` with the `votes_k<k>` whose mean `cost_match_usd` per pair is closest
-  (from the pilot: debate `high` ≈ k 9, debate `low` ≈ k 7, one-sided ≈ k 5). `make_table.py` will do this from `pairs.jsonl`.
+- **Cost matching for H1 (the proposal's rule):** compare each condition with `votes_k<k>` for the **smallest odd k whose mean
+  `cost_match_usd` per pair is at least the condition's** (`full.matched_k`). From the pilot: debate `high` → k 9 (ratio 8.95,
+  hence votes up to 11 in case the full run costs slightly more), debate `low` → 7, thinking `high` → 7, thinking `low` → 5,
+  one-sided → 5. `make_table.py` does this from the full run's own costs in `pairs.jsonl`.
 
 ## Planned layout
 

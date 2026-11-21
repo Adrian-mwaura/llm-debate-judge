@@ -104,7 +104,7 @@ def test_weak_judge_uses_fixed_temperature_and_votes_share_sample_zero():
 def test_majority_of_votes_is_used():
     pairs = make_pairs(30)
     recs = full.run_votes(pairs, chat_fn=FakeChat(), workers=4)
-    k9 = [r for r in recs if r["condition"] == "votes_k9"]
+    k9 = [r for r in recs if r["condition"] == f"votes_k{full.MAX_VOTE_K}"]
     k1 = [r for r in recs if r["condition"] == "votes_k1"]
     # with independent 70%-right votes, the majority of 9 should be right at least as often as one vote
     assert sum(r["correct"] for r in k9) >= sum(r["correct"] for r in k1)
@@ -147,14 +147,28 @@ PILOT_SUMMARY = {
 
 
 def test_estimate_cost_matches_the_notes():
-    # NOTES.md: debates 4.81, votes 2.69 (up to 9 per order), thinking 2.11, one-sided 0.37, weak 0.22
+    # NOTES.md: debates 4.81, thinking 2.11, one-sided 0.37, weak 0.22; votes up to 11 per order: 10 new samples
     n = {c: 570 if c in full.DEBATE else 600 if c == "votes" else 400 for c in full.GROUPS["all"]}
     e = {c: full.estimate_cost(PILOT_SUMMARY, c, n[c]) for c in full.GROUPS["all"]}
     assert e["debate_high"] + e["debate_low"] == pytest.approx(4.81, abs=0.01)
     assert e["judge_low"] + e["judge_high"] == pytest.approx(2.11, abs=0.01)
     assert e["one_sided"] == pytest.approx(0.37, abs=0.01)
     assert e["judge_none"] == pytest.approx(0.22, abs=0.01)
-    assert e["votes"] == pytest.approx(2.68, abs=0.01)  # 8 new samples per order on all 600 pairs
+    assert e["votes"] == pytest.approx(10 * 0.000558 * 600, abs=0.01)  # 3.35: 10 new samples per order on all 600 pairs
+
+
+@pytest.mark.parametrize("cond,expected", [
+    ("judge_low", 5), ("judge_high", 7), ("debate_low", 7), ("debate_high", 9), ("one_sided", 5)])
+def test_matched_k_follows_the_proposal_rule_on_pilot_costs(cond, expected):
+    weak = PILOT_SUMMARY["conditions"]["judge_none"]["cost_match_per_pair_incl_debaters"]
+    cost = PILOT_SUMMARY["conditions"][cond]["cost_match_per_pair_incl_debaters"]
+    assert full.matched_k(cost, weak) == expected
+
+
+def test_matched_k_uses_eleven_when_debate_costs_slightly_more_and_none_beyond():
+    assert full.matched_k(9.05, 1.0) == 11
+    assert full.matched_k(9.0, 1.0) == 9
+    assert full.matched_k(11.5, 1.0) is None
 
 
 def test_go_decision():

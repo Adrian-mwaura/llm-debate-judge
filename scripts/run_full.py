@@ -1,7 +1,7 @@
 """The full run on the 600 report pairs. See src/debate_judge/full.py.
 
     python scripts/run_full.py estimate          # no API calls: cost estimate per condition vs. the balance
-    python scripts/run_full.py shared            # weak judge, votes (k up to 9), thinking judge low/high
+    python scripts/run_full.py shared            # weak judge, votes (k up to 11), thinking judge low/high
     python scripts/run_full.py debate            # debate high/low, one-sided, concession check (needs final GO)
     python scripts/run_full.py all
 

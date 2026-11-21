@@ -6,12 +6,21 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-21:** Varun reviewed Adrian's PR #16 (hand labels and final GO: recomputed `decide` from his CSV independently, same result;
+  only `hand_label` changed) and PR #17 (proposal with the pilot result). Updated PR #15: built on #16, votes now go to k = 11, because
+  the proposal's rule is "the smallest odd k costing at least as much as each protocol" and debate `high` cost 8.95 weak verdicts in
+  the pilot, so k = 9 would be too small if the full run costs even slightly more. **No full run yet; the deadline is Mon 23 Nov.**
+  Balance US$8.45; full runs now estimated at about US$10.86, so top up before the debate group.
+- **2026-11-19:** **Final go/no-go: GO for question 6.** Adrian hand-labelled all 60 wrong-side pilot arguments blind (automatic verdict,
+  topic and effort hidden, order shuffled): all 60 defend their assigned response, 0 concede at `low` and 0 at `high`. The hand labels agree
+  with the automatic check on 60 of 60, so the automatic check can be trusted for the full run. `python scripts/run_pilot.py decide`
+  wrote `go_no_go_final` into `results/pilot/summary.json` (no API calls). Its `decided_utc` was corrected by hand from 14:13 to 09:13 UTC:
+  Adrian's PC clock reads UTC 5 hours ahead (Windows time zone set to UTC+3, clock showing UTC+8), to be fixed before he runs anything paid.
 - **2026-11-19:** Varun built the full-run script (`scripts/run_full.py`, `src/debate_judge/full.py`): the 600 report pairs, in a
-  "shared" group (weak judge, vote baseline k = 1–9, thinking judge low and high; useful for question 6 and question 8) and a
+  "shared" group (weak judge, vote baseline, thinking judge low and high; useful for question 6 and question 8) and a
   "debate" group (debates low and high, one-sided, concession check; refuses without the final GO). Budget check before every
-  condition. Estimate from pilot costs: shared US$5.01, debate US$5.18, total US$10.19; balance US$8.45. 8 new tests (174 pass).
-  PR #14 was merged before Adrian's review, and his 60 hand labels are still to do, so the go/no-go is not final yet.
-  Hugging Face is unreachable from Varun's PC today; `load_judgebench()` falls back to the cached copy of the pinned revision.
+  condition. 8 new tests. PR #14 was merged before Adrian's review.
+  Hugging Face is unreachable from Varun's PC at times; `load_judgebench()` falls back to the cached copy of the pinned revision.
 - **2026-11-19:** Varun made the fixes from Adrian's post-merge reviews of PR #11 and PR #12 (Adrian asked for #12's before the pilot;
   they landed just after it, and none of them changes a pilot number). SciPy-only tests skip without SciPy, the rest run.
   The freeze check now needs tag `prompts-v1` and `prompts.py`, `judge.py`, `debate.py` identical to it with no uncommitted
@@ -100,8 +109,8 @@ Put the newest entries first in each section.
 - [x] Both: read `docs/research/question_selection.md` before the meeting.
 - [x] Both: choose the research question (question 6 on JudgeBench, Adrian to confirm in the PR).
 - [ ] Both: write the 1-page proposal (`report/proposal.md`), due 2026-11-23. Draft merged (PR #5); add the pilot result and fix the review points.
-- [ ] Both: settle the go/no-go pilot rule. The proposal draft (PR #5) suggests 200 pairs; continue only if the thinking judge is better
-  with a paired 95% confidence interval above zero and fewer than 1 in 5 debaters concede.
+- [x] Both: settle the go/no-go pilot rule (200 pairs; the thinking judge better with a paired 95% interval above zero, and fewer than
+  1 in 5 wrong-side debaters concede). Applied 2026-11-19: GO.
 - [x] Evaluation lead (Varun): `chat()` helper with cache and call log (PR `varun/chat-helper`).
 - [x] Evaluation lead (Varun): confirm the model id (`deepseek-flash` is in the models list).
 - [x] Evaluation lead (Varun): add credit, then rerun `python scripts/check_model.py` to confirm the thinking switch (passed).
@@ -112,11 +121,12 @@ Put the newest entries first in each section.
 - [x] Varun: run the 200-pair pilot off-peak (2026-11-19, US$1.40; automatic decision GO).
 - [x] Varun: fixes from Adrian's post-merge reviews of PR #11 (SciPy-only skip) and PR #12 (strict freeze check, `decide` step,
   vote cap 15, concession denominator), branch `varun/pilot-results`.
-- [ ] Adrian: fill `hand_label` (`defends`, `concedes` or `unclear`) for the 60 wrong-side rows (`assigned_correct` = False) in
-  `results/pilot/concession_review.csv`; then run `python scripts/run_pilot.py decide` (free), commit, and both record the decision.
-- [x] Evaluation lead (Varun): vote baseline and the full-run script (`scripts/run_full.py`, branch `varun/full-run`, PR for Adrian).
-- [ ] Varun, Thu after 18:00: `python scripts/run_full.py shared` (about US$5.01; the balance of US$8.45 covers it).
-- [ ] Both: top up before `python scripts/run_full.py debate` (about US$5.18), which also needs the final GO.
+- [x] Adrian: fill `hand_label` for the 60 wrong-side rows in `results/pilot/concession_review.csv` and run
+  `python scripts/run_pilot.py decide` (done 2026-11-19: GO; branch `adrian/pilot-labels`, PR #16, reviewed by Varun 2026-11-21).
+- [x] Evaluation lead (Varun): vote baseline and the full-run script (`scripts/run_full.py`, PR #15; votes up to k = 11).
+- [ ] Adrian: review and merge PR #15 (after Varun merges #16 and #17).
+- [ ] Both: top up at least US$5 (US$10 recommended) before the debate group.
+- [ ] Varun: `python scripts/run_full.py shared` (about US$5.68), then `python scripts/run_full.py debate` (about US$5.18). Weekends are off-peak.
 - [ ] Evaluation lead (Varun): `make_table.py` (results table with intervals and the H1 test at matched cost) and the accuracy-vs-cost plot.
 - [ ] Both: top up before the full runs. Balance US$8.50; the full runs on the 600 report pairs are estimated at about US$10.20 at
   list price from the pilot's costs (debates 4.81, votes up to 9 per order 2.69, thinking judge 2.11, one-sided 0.37, weak 0.22),
@@ -147,6 +157,7 @@ Put the newest entries first in each section.
 
 | Date | Decision | Why | Who |
 |---|---|---|---|
+| 2026-11-19 | Go/no-go: GO for question 6. Thinking judge minus weak judge +18.5 points [+12.0, +25.0] on 200 pilot pairs; 0 of 30 wrong-side debaters concede at `low` and at `high` (hand labels, 60/60 agreement with the automatic check) | Both conditions of the rule agreed before the pilot are met | Adrian (hand labels and `decide`); Varun to confirm in the PR |
 | 2026-11-17 | Debater prompt `debater-v1`: one call per side, defend and critique, at most 250 words, "my response"/"the other response" instead of letters | One argument then fits both answer orders; letters can't be swapped safely because MMLU-Pro answers use option letters | Adrian |
 | 2026-11-17 | One-sided condition reuses one `high` debate argument, the correct side about half the time | No extra debater calls (saves about US$1.75), and a cleaner comparison with the debate | Adrian |
 | 2026-11-17 | Concessions: pilot runs debaters at `low` and `high` on 30 pilot pairs, both sides (120 calls, about US$0.20); Adrian reads the 30 wrong-side arguments per effort by hand; the full run uses a thinking-off check, validated against those labels | The go/no-go needs a reliable concession count; the same calls give the measured debater costs Varun needs to set k | Adrian |
@@ -172,6 +183,9 @@ Account balances: Varun US$10.00 topped up (2026-11-16); US$8.50 left after the 
 
 <!-- One entry per run: date, who, git commit, settings, accuracy, cost, notes. -->
 
+- **2026-11-19, Adrian, go/no-go decision (no API calls).** Hand labels for the 60 wrong-side pilot arguments in
+  `results/pilot/concession_review.csv`; `python scripts/run_pilot.py decide` → `go_no_go_final`: GO (question 6).
+  Concessions by hand: 0/30 at `low`, 0/30 at `high`; agreement with the automatic check 60/60. Spend US$0.
 - **2026-11-19, Varun, pilot, tag `prompts-v1` = commit 5509a74 (judge-v1, debater-v1, concession-v1).** 200 pilot pairs
   (100 knowledge, 48 reasoning, 29 math, 23 coding; 112 gpt, 88 claude). Weak judge: thinking off, temperature 1.0, max_tokens 1000.
   Thinking judge: `low` (16000) and `high` (32000). Debaters `low` and `high` on the first 30 pilot pairs, both sides;
@@ -189,6 +203,9 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-21 | Varun | Reviewed PR #16 and #17; updated PR #15 (rebased on #16, votes to k = 11) | Claude Code recomputed `decide` from Adrian's labelled CSV with the committed code (GO, 0/60 concessions, 60/60 agreement) and checked that no CSV cell other than `hand_label` changed; it checked the proposal's numbers (298/302 pairs, ±4 points, US$12) and found that the proposal's k rule needs votes beyond 9 |
+| 2026-11-19 | Adrian | Hand labels for the 60 wrong-side pilot arguments; final go/no-go | Adrian labelled by hand on a page Claude Code built from the committed pilot files: automatic verdict, topic and effort hidden, order shuffled, so the labels are an independent check. Claude Code checked the labels matched the 60 wrong-side rows, wrote them into the CSV (only `hand_label` changed), ran `decide`, and corrected the timestamp the PC clock got wrong |
+| 2026-11-19 | Adrian | Post-merge reviews of PR #11 and #12 | Claude Code read the code and checked the interval formulas against their published definitions; found the SciPy import that stops the whole suite, the too-blunt freeze check, the missing path from hand labels to the decision, the missing vote cap and the concession denominator; posted as PR comments |
 | 2026-11-19 | Varun | Full-run script and vote baseline; 8 tests | Claude Code wrote them; tests with a fake API check vote k=1 equals the judge alone, vote costs scale with k, debate and one-sided costs include their arguments, and the budget check stops a run while keeping finished conditions; a test against the NOTES cost figures caught an underestimate of the vote cost (votes 2–9 are new on all 600 pairs, not 400) |
 | 2026-11-19 | Varun | Fixed Adrian's PR #11 and #12 review points; 22 new tests | Claude Code made the fixes; freeze-check tests run against a throwaway git repo; the SciPy fix was checked by running the suite with SciPy made unimportable (11 SciPy tests skip, 155 run); the new rules were applied to the committed pilot files without API calls and changed no number. What went wrong: #11 and #12 were merged before Adrian reviewed them, and the pilot ran before his #12 fixes; from now on PRs wait for review |
 | 2026-11-19 | Varun | Reviewed and merged PR #13; tagged the prompts; ran the pilot | Claude Code ran the full suite on main + #13 (144 pass, real-data tests included), then scheduled the tag and pilot for the off-peak window; checked the logs for the API key before committing (none; one "Risk-free" false positive) |
