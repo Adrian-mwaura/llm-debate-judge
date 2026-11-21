@@ -1,0 +1,57 @@
+{
+ "key": "7684bd125b03590cfc82dc8a30a6739e766e7581d5642e309d806475385fd9ce",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nWe have a grid with H horizontal rows and W vertical columns.\r\nWe denote by (i,j) the cell at the i-th row from the top and j-th column from the left.\r\nEach cell in the grid has a lowercase English letter written on it.  The letter written on (i,j) equals the j-th character of a given string S_i.\nSnuke will repeat moving to an adjacent cell sharing a side to travel from (1,1) to (H,W).\r\nDetermine if there is a path\r\nin which the letters written on the visited cells (including initial (1,1) and final (H,W)) are\r\ns \\rightarrow n \\rightarrow u \\rightarrow k\n\\rightarrow e \\rightarrow s \\rightarrow n \\rightarrow \\dots, in the order of visiting.\r\nHere, a cell (i_1,j_1) is said to be an adjacent cell of (i_2,j_2) sharing a side if and only if |i_1-i_2|+|j_1-j_2| = 1.\nFormally, determine if there is a sequence of cells ((i_1,j_1),(i_2,j_2),\\dots,(i_k,j_k)) such that:\n\n- (i_1,j_1) = (1,1),(i_k,j_k) = (H,W);\n- (i_{t+1},j_{t+1}) is an adjacent cell of (i_t,j_t) sharing a side, for all t\\ (1 \\leq t < k); and\n- the letter written on (i_t,j_t) coincides with the (((t-1) \\bmod 5) + 1)-th character of snuke, for all t\\ (1 \\leq t \\leq k).\n\nInput\n\nThe input is given from Standard Input in the following format:\nH W\r\nS_1\r\nS_2\r\n\\vdots\r\nS_H\n\nOutput\n\nPrint Yes if there is a path satisfying the conditions in the problem statement; print No otherwise.\n\nConstraints\n\n\n- 2\\leq H,W \\leq 500\n- H and W are integers.\n- S_i is a string of length W consisting of lowercase English letters.\n\nSample Input 1\n\n2 3\r\nsns\r\neuk\n\nSample Output 1\n\nYes\r\n\nThe path (1,1) \\rightarrow (1,2)  \\rightarrow (2,2) \\rightarrow (2,3) satisfies the conditions\r\nbecause they have s \\rightarrow n \\rightarrow u \\rightarrow k written on them, in the order of visiting.\n\nSample Input 2\n\n2 2\r\nab\r\ncd\n\nSample Output 2\n\nNo\n\nSample Input 3\n\n5 7\r\nskunsek\r\nnukesnu\r\nukeseku\r\nnsnnesn\r\nuekukku\n\nSample Output 3\n\nYes\n\n# Response A\n\n# YOUR CODE HERE\nfrom collections import deque\n\ndef can_reach_end(H, W, grid):\n    snuke = \"snuke\"\n    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n    \n    queue = deque([(0, 0, 0)])\n    visited = set([(0, 0, 0)])\n    \n    while queue:\n        i, j, idx = queue.popleft()\n        \n        if i == H - 1 and j == W - 1:\n            return \"Yes\"\n        \n        for di, dj in directions:\n            ni, nj = i + di, j + dj\n            next_idx = (idx + 1) % 5\n            \n            if 0 <= ni < H and 0 <= nj < W and grid[ni][nj] == snuke[next_idx]:\n                if (ni, nj, next_idx) not in visited:\n                    queue.append((ni, nj, next_idx))\n                    visited.add((ni, nj, next_idx))\n    \n    return \"No\"\n\nH, W = map(int, input().split())\ngrid = [input().strip() for _ in range(H)]\n\nif grid[0][0] != 's':\n    print(\"No\")\nelse:\n    print(can_reach_end(H, W, grid))\n\n# Response B\n\n# YOUR CODE HERE\nimport sys\n\ndef can_reach_end(grid, h, w, i, j, step):\n    if i == h-1 and j == w-1:\n        return True\n    \n    target = \"snuke\"[step % 5]\n    \n    for di, dj in [(0, 1), (1, 0), (0, -1), (-1, 0)]:\n        ni, nj = i + di, j + dj\n        if 0 <= ni < h and 0 <= nj < w and grid[ni][nj] == target:\n            if can_reach_end(grid, h, w, ni, nj, step + 1):\n                return True\n    \n    return False\n\nh, w = map(int, input().split())\ngrid = [input().strip() for _ in range(h)]\n\nif grid[0][0] == 's' and can_reach_end(grid, h, w, 0, 0, 0):\n    print(\"Yes\")\nelse:\n    print(\"No\")\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 6,
+ "response": {
+  "text": "{\"reasoning\": \"Response A uses BFS with visited state including (i,j,idx), checking the starting cell is 's' and the next character based on step. Response B uses naive DFS without visited set, which can revisit cells and potentially infinite loop or exponentially blow up, and its target index is off: at step 0 target is 's' but checking neighbors should be 'n'. Also B does not verify the current cell matches, and lacks memoization. A is correct.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1252,
+  "cache_hit_tokens": 1024,
+  "completion_tokens": 107,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 107,
+   "prompt_tokens": 1252,
+   "total_tokens": 1359,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 1024,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 1024,
+   "prompt_cache_miss_tokens": 228
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:15:21.595425+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00010147200000000001,
+ "latency_s": 1.688
+}

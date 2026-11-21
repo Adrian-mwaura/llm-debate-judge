@@ -1,0 +1,57 @@
+{
+ "key": "a570aac63ff1c504072698a1f6bb6ce8b69c999cdcdaad325aaab6122f967afd",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given a 0-indexed array nums and a non-negative integer k.\nIn one operation, you can do the following:\n\nChoose an index i that hasn't been chosen before from the range [0, nums.length - 1].\nReplace nums[i] with any integer from the range [nums[i] - k, nums[i] + k].\n\nThe beauty of the array is the length of the longest subsequence consisting of equal elements.\nReturn the maximum possible beauty of the array nums after applying the operation any number of times.\nNote that you can apply the operation to each index only once.\nA subsequence of an array is a new array generated from the original array by deleting some elements (possibly none) without changing the order of the remaining elements.\n \nExample 1:\n\nInput: nums = [4,6,1,2], k = 2\nOutput: 3\nExplanation: In this example, we apply the following operations:\n- Choose index 1, replace it with 4 (from range [4,8]), nums = [4,4,1,2].\n- Choose index 3, replace it with 4 (from range [0,4]), nums = [4,4,1,4].\nAfter the applied operations, the beauty of the array nums is 3 (subsequence consisting of indices 0, 1, and 3).\nIt can be proven that 3 is the maximum possible length we can achieve.\n\nExample 2:\n\nInput: nums = [1,1,1,1], k = 10\nOutput: 4\nExplanation: In this example we don't have to apply any operations.\nThe beauty of the array nums is 4 (whole array).\n\n \nConstraints:\n\n1 <= nums.length <= 10^5\n0 <= nums[i], k <= 10^5\n\n# Response A\n\nfrom collections import defaultdict\nfrom typing import List\n\nclass Solution:\n    def maximumBeauty(self, nums: List[int], k: int) -> int:\n        # Dictionary to count the frequency of each number\n        freq = defaultdict(int)\n        \n        # Iterate over each number in the array\n        for num in nums:\n            # Increment the frequency of all numbers in the range [num - k, num + k]\n            for i in range(num - k, num + k + 1):\n                freq[i] += 1\n        \n        # The maximum frequency is the maximum possible beauty\n        return max(freq.values())\n\n# Response B\n\nfrom typing import List\n\nclass Solution:\n    def maximumBeauty(self, nums: List[int], k: int) -> int:\n        # Sort the array to make it easier to find the longest subsequence\n        nums.sort()\n        \n        # Initialize the sliding window pointers and the maximum beauty\n        left = 0\n        max_beauty = 0\n        \n        # Iterate through the array with the right pointer\n        for right in range(len(nums)):\n            # Ensure the current window is valid\n            while nums[right] - nums[left] > 2 * k:\n                left += 1\n            # Update the maximum beauty\n            max_beauty = max(max_beauty, right - left + 1)\n        \n        return max_beauty\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 1,
+ "response": {
+  "text": "{\"reasoning\":\"Response A iterates over ranges of size up to 2k+1 for each element, which can be O(n*k) and infeasible for n,k up to 1e5. It also misunderstands the operation: each index can only be changed once, but the freq counting approach can overcount because it counts all possible target values independently. Response B correctly observes that a set of elements can be made equal iff max-min <= 2k, and uses sorting plus a sliding window to find the longest valid subsequence in O(n log n). This matches the standard correct solution.\",\"winner\":\"B\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 794,
+  "cache_hit_tokens": 640,
+  "completion_tokens": 129,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 129,
+   "prompt_tokens": 794,
+   "total_tokens": 923,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 640,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 640,
+   "prompt_cache_miss_tokens": 154
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:13:41.727543+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00010241999999999999,
+ "latency_s": 1.531
+}

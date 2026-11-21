@@ -1,0 +1,57 @@
+{
+ "key": "f385fc95c5d4fb51f3e3329590ee2936c19bf8cd22a421bb3cfb944052106f01",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nWe have N cups of ice cream.\r\nThe flavor and deliciousness of the i-th cup are F_i and S_i, respectively (S_i is an even number).  \nYou will choose and eat two of the N cups.\r\nYour satisfaction here is defined as follows.\n\n- Let s and t (s \\ge t) be the deliciousness of the eaten cups.\n- If the two cups have different flavors, your satisfaction is \\displaystyle s+t.\n- Otherwise, your satisfaction is \\displaystyle s + \\frac{t}{2}.\n\n\n\nFind the maximum achievable satisfaction.\n\nInput\n\nInput is given from Standard Input in the following format:\nN\r\nF_1 S_1\r\nF_2 S_2\r\n\\vdots\r\nF_N S_N\n\nOutput\n\nPrint the answer as an integer.\n\nConstraints\n\n\n- All input values are integers.\n- 2 \\le N \\le 3 \\times 10^5\n- 1 \\le F_i \\le N\n- 2 \\le S_i \\le 10^9\n- S_i is even.\n\nSample Input 1\n\n4\r\n1 4\r\n2 10\r\n2 8\r\n3 6\n\nSample Output 1\n\n16\r\n\nConsider eating the second and fourth cups.  \n\n- The second cup has a flavor of 2 and deliciousness of 10.\n- The fourth cup has a flavor of 3 and deliciousness of 6.\n- Since they have different flavors, your satisfaction is 10+6=16.\n\nThus, you can achieve the satisfaction of 16.\r\nYou cannot achieve a satisfaction greater than 16.\n\nSample Input 2\n\n4\r\n4 10\r\n3 2\r\n2 4\r\n4 12\n\nSample Output 2\n\n17\r\n\nConsider eating the first and fourth cups.  \n\n- The first cup has a flavor of 4 and deliciousness of 10.\n- The fourth cup has a flavor of 4 and deliciousness of 12.\n- Since they have the same flavor, your satisfaction is 12+\\frac{10}{2}=17.\n\nThus, you can achieve the satisfaction of 17.\r\nYou cannot achieve a satisfaction greater than 17.\n\n# Response A\n\n# YOUR CODE HERE\nN = int(input())\nice_creams = [tuple(map(int, input().split())) for _ in range(N)]\n\n# Sort ice creams by deliciousness in descending order\nice_creams.sort(key=lambda x: x[1], reverse=True)\n\n# Initialize variables to store the best ice creams for each flavor\nbest = {}\nsecond_best = {}\n\nmax_satisfaction = 0\n\nfor flavor, deliciousness in ice_creams:\n    if flavor not in best:\n        best[flavor] = deliciousness\n    elif flavor not in second_best:\n        second_best[flavor] = deliciousness\n        # Check satisfaction for same flavor\n        max_satisfaction = max(max_satisfaction, best[flavor] + deliciousness // 2)\n    \n    # Check satisfaction for different flavors\n    for other_flavor, other_deliciousness in best.items():\n        if other_flavor != flavor:\n            max_satisfaction = max(max_satisfaction, deliciousness + other_deliciousness)\n\nprint(max_satisfaction)\n\n# Response B\n\n# YOUR CODE HERE\nfrom collections import defaultdict\n\ndef max_satisfaction():\n    N = int(input())\n    flavors = defaultdict(list)\n    \n    for _ in range(N):\n        F, S = map(int, input().split())\n        flavors[F].append(S)\n    \n    max_same = 0\n    max_diff = [0, 0]\n    \n    for flavor in flavors:\n        if len(flavors[flavor]) >= 2:\n            flavors[flavor].sort(reverse=True)\n            max_same = max(max_same, flavors[flavor][0] + flavors[flavor][1] // 2)\n        \n        if flavors[flavor]:\n            if flavors[flavor][0] > max_diff[0]:\n                max_diff[1] = max_diff[0]\n                max_diff[0] = flavors[flavor][0]\n            elif flavors[flavor][0] > max_diff[1]:\n                max_diff[1] = flavors[flavor][0]\n    \n    return max(max_same, sum(max_diff))\n\nprint(max_satisfaction())\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 1,
+ "response": {
+  "text": "{\"reasoning\": \"Response B is correct: it groups scoops by flavor, computes the best same-flavor satisfaction (top1 + top2/2), and finds the best two different-flavor scoops via the two largest per-flavor maximums. Response A is flawed: its different-flavor check only compares against already-seen best flavors and may miss valid pairs depending on sort/iteration order; also it overwrites/updates best incorrectly and can compute suboptimal same-flavor values. B handles all cases correctly and efficiently.\", \"winner\": \"B\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1056,
+  "cache_hit_tokens": 896,
+  "completion_tokens": 116,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 116,
+   "prompt_tokens": 1056,
+   "total_tokens": 1172,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 896,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 896,
+   "prompt_cache_miss_tokens": 160
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:20:13.193850+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 9.6288e-05,
+ "latency_s": 1.5
+}

@@ -1,0 +1,57 @@
+{
+ "key": "b3b9428aa39d1cfc98a217b6b97496667d5decc3293d3041ba6242e8316b8fbe",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given a 0-indexed array maxHeights of n integers.\nYou are tasked with building n towers in the coordinate line. The i^th tower is built at coordinate i and has a height of heights[i].\nA configuration of towers is beautiful if the following conditions hold:\n\n1 <= heights[i] <= maxHeights[i]\nheights is a mountain array.\n\nArray heights is a mountain if there exists an index i such that:\n\nFor all 0 < j <= i, heights[j - 1] <= heights[j]\nFor all i <= k < n - 1, heights[k + 1] <= heights[k]\n\nReturn the maximum possible sum of heights of a beautiful configuration of towers.\n \nExample 1:\n\nInput: maxHeights = [5,3,4,1,1]\nOutput: 13\nExplanation: One beautiful configuration with a maximum sum is heights = [5,3,3,1,1]. This configuration is beautiful since:\n- 1 <= heights[i] <= maxHeights[i]  \n- heights is a mountain of peak i = 0.\nIt can be shown that there exists no other beautiful configuration with a sum of heights greater than 13.\nExample 2:\n\nInput: maxHeights = [6,5,3,9,2,7]\nOutput: 22\nExplanation: One beautiful configuration with a maximum sum is heights = [3,3,3,9,2,2]. This configuration is beautiful since:\n- 1 <= heights[i] <= maxHeights[i]\n- heights is a mountain of peak i = 3.\nIt can be shown that there exists no other beautiful configuration with a sum of heights greater than 22.\nExample 3:\n\nInput: maxHeights = [3,2,5,5,2,3]\nOutput: 18\nExplanation: One beautiful configuration with a maximum sum is heights = [2,2,5,5,2,2]. This configuration is beautiful since:\n- 1 <= heights[i] <= maxHeights[i]\n- heights is a mountain of peak i = 2. \nNote that, for this configuration, i = 3 can also be considered a peak.\nIt can be shown that there exists no other beautiful configuration with a sum of heights greater than 18.\n\n \nConstraints:\n\n1 <= n == maxHeights <= 10^3\n1 <= maxHeights[i] <= 10^9\n\n# Response A\n\nclass Solution:\n    def maximumSumOfHeights(self, maxHeights: List[int]) -> int:\n        n = len(maxHeights)\n        \n        def calculate_sum(peak):\n            left = [0] * n\n            right = [0] * n\n            stack = []\n            \n            # Calculate left part\n            for i in range(peak + 1):\n                while stack and maxHeights[stack[-1]] > maxHeights[i]:\n                    stack.pop()\n                if not stack:\n                    left[i] = (i + 1) * maxHeights[i]\n                else:\n                    j = stack[-1]\n                    left[i] = left[j] + (i - j) * maxHeights[i]\n                stack.append(i)\n            \n            # Reset stack for right part\n            stack.clear()\n            \n            # Calculate right part\n            for i in range(n - 1, peak - 1, -1):\n                while stack and maxHeights[stack[-1]] > maxHeights[i]:\n                    stack.pop()\n                if not stack:\n                    right[i] = (n - i) * maxHeights[i]\n                else:\n                    j = stack[-1]\n                    right[i] = right[j] + (j - i) * maxHeights[i]\n                stack.append(i)\n            \n            return left[peak] + right[peak] - maxHeights[peak]\n        \n        return max(calculate_sum(i) for i in range(n))\n\n# Response B\n\nclass Solution:\n    def maximumSumOfHeights(self, maxHeights: List[int]) -> int:\n        n = len(maxHeights)\n        \n        def calculate_sum(peak):\n            left = [0] * n\n            right = [0] * n\n            stack = []\n            \n            # Calculate left part\n            for i in range(peak + 1):\n                while stack and maxHeights[stack[-1]] > maxHeights[i]:\n                    stack.pop()\n                if not stack:\n                    left[i] = (i + 1) * maxHeights[i]\n                else:\n                    j = stack[-1]\n                    left[i] = left[j] + (i - j) * maxHeights[i]\n                stack.append(i)\n            \n            # Reset stack for right part\n            stack.clear()\n            \n            # Calculate right part\n            for i in range(n - 1, peak - 1, -1):\n                while stack and maxHeights[stack[-1]] > maxHeights[i]:\n                    stack.pop()\n                if not stack:\n                    right[i] = (n - i) * maxHeights[i]\n                else:\n                    j = stack[-1]\n                    right[i] = right[j] + (j - i) * maxHeights[i]\n                stack.append(i)\n            \n            # Sum up the configuration\n            return sum(left[:peak+1]) + sum(right[peak+1:])\n        \n        # Try each index as peak and find maximum sum\n        return max(calculate_sum(i) for i in range(n))\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 10,
+ "response": {
+  "text": "{\"reasoning\": \"Response A uses the correct formula: left[peak] + right[peak] - maxHeights[peak], giving the maximum sum for the mountain with the given peak, then takes the max over all peaks. Response B incorrectly sums left[:peak+1] + right[peak+1:], which omits considering the right values properly and double/mis-handles the peak region; the right array is computed for indices >= peak, but only right[peak+1:] is added, ignoring right[peak] and potentially wrong. A is correct.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1269,
+  "cache_hit_tokens": 1024,
+  "completion_tokens": 124,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 124,
+   "prompt_tokens": 1269,
+   "total_tokens": 1393,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 1024,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 1024,
+   "prompt_cache_miss_tokens": 245
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:18:02.953704+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00011422199999999999,
+ "latency_s": 1.578
+}

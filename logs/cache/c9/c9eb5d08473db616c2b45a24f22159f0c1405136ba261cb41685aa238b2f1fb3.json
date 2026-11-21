@@ -1,0 +1,63 @@
+{
+ "key": "c9eb5d08473db616c2b45a24f22159f0c1405136ba261cb41685aa238b2f1fb3",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nVanya and Vova are playing a game. Players are given an integer $n$. On their turn, the player can add $1$ to the current integer or subtract $1$. The players take turns; Vanya starts. If after Vanya's move the integer is divisible by $3$, then he wins. If $10$ moves have passed and Vanya has not won, then Vova wins.\n\nWrite a program that, based on the integer $n$, determines who will win if both players play optimally.\n\nInput\n\nThe first line contains the integer $t$ ($1 \\leq t \\leq 100$) — the number of test cases.\n\nThe single line of each test case contains the integer $n$ ($1 \\leq n \\leq 1000$).\n\nOutput\n\nFor each test case, print \"First\" without quotes if Vanya wins, and \"Second\" without quotes if Vova wins.Sample Input 1:\n6\n\n1\n\n3\n\n5\n\n100\n\n999\n\n1000\n\n\n\nSample Output 1:\n\nFirst\nSecond\nFirst\nFirst\nSecond\nFirst\n\n\n# Response A\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    if n % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nt = int(data[0])\nresults = []\n\nfor i in range(1, t + 1):\n    n = int(data[i])\n    results.append(determine_winner(n))\n\nfor result in results:\n    print(result)\n\n# Response B\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    # Check if Vanya can win in the first move\n    if (n + 1) % 3 == 0 or (n - 1) % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\ndef main():\n    import sys\n    input = sys.stdin.read\n    data = input().split()\n    \n    t = int(data[0])\n    results = []\n    for i in range(1, t + 1):\n        n = int(data[i])\n        results.append(determine_winner(n))\n    \n    for result in results:\n        print(result)\n\nif __name__ == \"__main__\":\n    main()\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 16000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "low",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\": \"Vanya wins immediately exactly when n is not divisible by 3, since he can add or subtract 1 to reach a multiple of 3. If n is divisible by 3, Vova can keep returning to a multiple of 3 on his turns, preventing Vanya from winning. Response B implements this correctly; Response A incorrectly reverses the condition.\", \"winner\": \"B\"}",
+  "reasoning": "We need answer judge. Need decide correct response. Need reason. Problem: given n, Vanya can add/subtract 1. If after Vanya's move integer divisible by 3, wins. Vova moves if not? If 10 moves passed and Vanya not won, Vova wins. Need both optimal. Need determine winner for n 1..1000. Need know Codeforces? This sounds CF \"Vanya and ...\" Maybe \"Game with integers\" where Vanya starts and after his move divisible by 3. Since from any n, Vanya can on first move make divisible by 3 if n mod 3 != 0? Let's check: n mod3=0: n+1 mod3=1, n-1 mod3=2, cannot make divisible by3. n mod3=1: n-1 divisible. n mod3=2: n+1 divisible. So Vanya wins immediately iff n not divisible by 3. If n divisible by 3, cannot win first move. What can Vova do? Vova wants prevent Vanya for 10 moves. But after Vanya's first move n mod3 becomes 1 or2. Then Vova moves +/-1. Vova can move to make? Suppose n=3. Vanya can go to 2 or4. Vova then can add/subtract. If Vova moves from 2 to 3? Then integer divisible by3 after Vova's move, but only Vanya wins after his move? The condition: \"If after Vanya's move the integer is divisible by 3, then he wins.\" Not Vova. Vova wants survive. From 2, Vova can move to1 or3. If to1, then Vanya can subtract1 to0 divisible by3 and wins. If to3, then Vanya from3 cannot make divisible by3? From3, Vanya can go2 or4 not divisible, so continue. So Vova can keep returning to multiple of3 after his move. Then Vanya cannot win until? Let's simulate n=3. Moves count? Vanya move1: 3->2. Vova move1: 2->3. Vanya move2: 3->2/4, etc. Vanya never wins. After 10 moves? \"If 10 moves have passed and Vanya has not won\" ambiguous total moves? Usually 10 moves total. Vanya may have 5 moves, Vova 5. Vova wins. So n divisible by3 => Second. Sample n=3 Second, 999 Second. n=1 First (not div), 5 First, 100 mod1 First, 1000 mod1 First. So criterion n%3 !=0 First else Second. Response A: if n%3==0 return First else Second. That's inverted! Response B: if (n+1)%3==0 or (n-1)%3==0 return First else Second. This is equivalent n mod3 !=0? Let's check n=3: (4)%3=1, (2)%3=2 neither => Second. n=1: (2)%3=2? no; (0)%3=0 yes => First. n=5:6%3=0 => First. n=100:101%3=2,99%3=0 => First. n=999:1000%3=1,998%3=2 => Second. n=1000:1001%3=2? 999+2 ->2;999%3=0 => First. Matches. So B correct. Need produce JSON only, reasoning <=100 words.",
+  "finish_reason": "stop",
+  "prompt_tokens": 630,
+  "cache_hit_tokens": 128,
+  "completion_tokens": 858,
+  "reasoning_tokens": 774,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 858,
+   "prompt_tokens": 630,
+   "total_tokens": 1488,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 774,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 128,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 128,
+   "prompt_cache_miss_tokens": 502
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:21:00.303035+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.000590484,
+ "latency_s": 5.86
+}

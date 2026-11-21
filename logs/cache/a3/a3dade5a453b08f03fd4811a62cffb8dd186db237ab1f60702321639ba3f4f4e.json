@@ -1,0 +1,57 @@
+{
+ "key": "a3dade5a453b08f03fd4811a62cffb8dd186db237ab1f60702321639ba3f4f4e",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given a 0-indexed integer array nums representing the score of students in an exam. The teacher would like to form one non-empty group of students with maximal strength, where the strength of a group of students of indices i_0, i_1, i_2, ... , i_k is defined as nums[i_0] * nums[i_1] * nums[i_2] * ... * nums[i_k​].\nReturn the maximum strength of a group the teacher can create.\n \nExample 1:\n\nInput: nums = [3,-1,-5,2,5,-9]\nOutput: 1350\nExplanation: One way to form a group of maximal strength is to group the students at indices [0,2,3,4,5]. Their strength is 3 * (-5) * 2 * 5 * (-9) = 1350, which we can show is optimal.\n\nExample 2:\n\nInput: nums = [-4,-5,-4]\nOutput: 20\nExplanation: Group the students at indices [0, 1] . Then, we’ll have a resulting strength of 20. We cannot achieve greater strength.\n\n \nConstraints:\n\n1 <= nums.length <= 13\n-9 <= nums[i] <= 9\n\n# Response A\n\nfrom typing import List\n\nclass Solution:\n    def maxStrength(self, nums: List[int]) -> int:\n        # Sort the numbers to handle negatives and positives easily\n        nums.sort()\n        \n        # If there's only one number, return it as the maximum strength\n        if len(nums) == 1:\n            return nums[0]\n        \n        # Initialize variables to track the maximum product\n        max_product = float('-inf')\n        current_product = 1\n        has_positive = False\n        \n        # Traverse the sorted list and calculate the product\n        for num in nums:\n            if num != 0:\n                current_product *= num\n                max_product = max(max_product, current_product)\n                if num > 0:\n                    has_positive = True\n        \n        # If all numbers are negative and we have an odd count, we need to exclude the smallest negative number\n        if not has_positive and len(nums) % 2 != 0:\n            current_product //= nums[0]\n            max_product = max(max_product, current_product)\n        \n        return max_product\n\n# Example usage:\n# sol = Solution()\n# print(sol.maxStrength([3,-1,-5,2,5,-9]))  # Output: 1350\n# print(sol.maxStrength([-4,-5,-4]))        # Output: 20\n\n# Response B\n\nfrom typing import List\nfrom itertools import combinations\n\nclass Solution:\n    def maxStrength(self, nums: List[int]) -> int:\n        max_strength = float('-inf')\n        n = len(nums)\n        \n        # Iterate over all possible non-empty subsets\n        for r in range(1, n + 1):\n            for subset in combinations(nums, r):\n                product = 1\n                for num in subset:\n                    product *= num\n                max_strength = max(max_strength, product)\n        \n        return max_strength\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 5,
+ "response": {
+  "text": "{\"reasoning\": \"Response B's brute-force enumerates all non-empty subsets (2^n - 1, n≤13) and computes the product of each, which is guaranteed correct. Response A's greedy/sorted approach is flawed: e.g., it mishandles odd-count negatives when zeros/positives exist and doesn't correctly avoid including unwanted zeros/negatives. Checking example 1: A sorts to [-9,-5,-1,2,3,5], product accumulates but max tracking may miss excluding -1; more importantly the odd-negative handling only applies when no positive exists, so with positives present and odd negatives it keeps a negative factor. Thus A is incorrect.\", \"winner\": \"B\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 793,
+  "cache_hit_tokens": 640,
+  "completion_tokens": 146,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 146,
+   "prompt_tokens": 793,
+   "total_tokens": 939,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 640,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 640,
+   "prompt_cache_miss_tokens": 153
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:15:07.663012+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00011247,
+ "latency_s": 2.14
+}

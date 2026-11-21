@@ -1,0 +1,57 @@
+{
+ "key": "b81f80da4df901b5aa7e631e2e873ec69fdec383af175978fda372f60a809433",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given three positive integers N, M, and K. Here, N and M are different.\nPrint the K-th smallest positive integer divisible by exactly one of N and M.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN M K\n\nOutput\n\nPrint the K-th smallest positive integer divisible by exactly one of N and M.\n\nConstraints\n\n\n- 1 \\leq N, M \\leq 10^8\n- 1 \\leq K \\leq 10^{10}\n- N \\neq M\n- N, M, and K are integers.\n\nSample Input 1\n\n2 3 5\n\nSample Output 1\n\n9\n\nThe positive integers divisible by exactly one of 2 and 3 are 2, 3, 4, 8, 9, 10, \\ldots in ascending order.\nNote that 6 is not included because it is divisible by both 2 and 3.\nThe fifth smallest positive integer that satisfies the condition is 9, so we print 9.\n\nSample Input 2\n\n1 2 3\n\nSample Output 2\n\n5\n\nThe numbers that satisfy the condition are 1, 3, 5, 7, \\ldots in ascending order.\n\nSample Input 3\n\n100000000 99999999 10000000000\n\nSample Output 3\n\n500000002500000000\n\n# Response A\n\n# YOUR CODE HERE\ndef gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n\ndef lcm(a, b):\n    return a * b // gcd(a, b)\n\nN, M, K = map(int, input().split())\n\nL = lcm(N, M)\ncount_per_lcm = L // N + L // M - 2\n\nfull_cycles = (K - 1) // count_per_lcm\nremaining = K - full_cycles * count_per_lcm\n\nresult = full_cycles * L\n\nn, m = 1, 1\nfor _ in range(remaining):\n    while n * N <= m * M:\n        if n * N < m * M:\n            result += n * N\n            n += 1\n            break\n        n += 1\n    else:\n        result += m * M\n        m += 1\n\nprint(result)\n\n# Response B\n\n# YOUR CODE HERE\ndef gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n\ndef lcm(a, b):\n    return a * b // gcd(a, b)\n\ndef count_divisible(num, limit):\n    return limit // num\n\nN, M, K = map(int, input().split())\n\nlcm_NM = lcm(N, M)\nlow, high = 1, 10**18\n\nwhile low < high:\n    mid = (low + high) // 2\n    count = count_divisible(N, mid) + count_divisible(M, mid) - 2 * count_divisible(lcm_NM, mid)\n    \n    if count < K:\n        low = mid + 1\n    else:\n        high = mid\n\nresult = low\n\nwhile True:\n    if result % N == 0 and result % M != 0:\n        break\n    if result % M == 0 and result % N != 0:\n        break\n    result += 1\n\nprint(result)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 2,
+ "response": {
+  "text": "{\"reasoning\": \"Response B uses binary search on the count of numbers divisible by exactly one of N or M, with count = floor(mid/N)+floor(mid/M)-2*floor(mid/lcm), which is correct. Its final adjustment loop is redundant but does not break correctness. Response A's counting per LCM cycle is correct (L/N + L/M - 2), but its subsequent enumeration logic is flawed and may not produce the correct K-th value. Therefore B is correct.\", \"winner\": \"B\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 841,
+  "cache_hit_tokens": 640,
+  "completion_tokens": 108,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 108,
+   "prompt_tokens": 841,
+   "total_tokens": 949,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 640,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 640,
+   "prompt_cache_miss_tokens": 201
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:19:07.773837+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 9.687e-05,
+ "latency_s": 1.437
+}

@@ -1,0 +1,57 @@
+{
+ "key": "c28e3c48b9416ea8bed6cadac490961a58548999b51ebbf8df8285d84e6ca9aa",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nGiven a positive integer n, return the punishment number of n.\nThe punishment number of n is defined as the sum of the squares of all integers i such that:\n\n1 <= i <= n\nThe decimal representation of i * i can be partitioned into contiguous substrings such that the sum of the integer values of these substrings equals i.\n\n \nExample 1:\n\nInput: n = 10\nOutput: 182\nExplanation: There are exactly 3 integers i that satisfy the conditions in the statement:\n- 1 since 1 * 1 = 1\n- 9 since 9 * 9 = 81 and 81 can be partitioned into 8 + 1.\n- 10 since 10 * 10 = 100 and 100 can be partitioned into 10 + 0.\nHence, the punishment number of 10 is 1 + 81 + 100 = 182\n\nExample 2:\n\nInput: n = 37\nOutput: 1478\nExplanation: There are exactly 4 integers i that satisfy the conditions in the statement:\n- 1 since 1 * 1 = 1. \n- 9 since 9 * 9 = 81 and 81 can be partitioned into 8 + 1. \n- 10 since 10 * 10 = 100 and 100 can be partitioned into 10 + 0. \n- 36 since 36 * 36 = 1296 and 1296 can be partitioned into 1 + 29 + 6.\nHence, the punishment number of 37 is 1 + 81 + 100 + 1296 = 1478\n\n \nConstraints:\n\n1 <= n <= 1000\n\n# Response A\n\nclass Solution:\n    def punishmentNumber(self, n: int) -> int:\n        def can_partition(num_str, target):\n            if target == 0:\n                return True\n            if not num_str:\n                return False\n            for i in range(1, len(num_str) + 1):\n                part = int(num_str[:i])\n                if part <= target and can_partition(num_str[i:], target - part):\n                    return True\n            return False\n        \n        punishment_sum = 0\n        for i in range(1, n + 1):\n            square_str = str(i * i)\n            if can_partition(square_str, i):\n                punishment_sum += i * i\n        \n        return punishment_sum\n\n# Response B\n\nclass Solution:\n    def punishmentNumber(self, n: int) -> int:\n        def can_partition(num, target):\n            str_num = str(num)\n            def dfs(index, current_sum):\n                if index == len(str_num):\n                    return current_sum == target\n                for i in range(index, len(str_num)):\n                    part = int(str_num[index:i+1])\n                    if dfs(i+1, current_sum + part):\n                        return True\n                return False\n            \n            return dfs(0, 0)\n        \n        punishment_sum = 0\n        for i in range(1, n + 1):\n            square = i * i\n            if can_partition(square, i):\n                punishment_sum += square\n        \n        return punishment_sum\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 8,
+ "response": {
+  "text": "{\"reasoning\": \"Response A correctly handles the partition check with a base case for target == 0 and properly iterates over all possible substring lengths, checking part <= target. It correctly computes the punishment number. Response B has a bug: the loop `for i in range(index, len(str_num))` allows i to equal index, producing single-character substrings, but it fails to consider the full remaining string as a single part when index > 0 because the range excludes len(str_num). Specifically, `range(index, len(str_num))` ends at len-1, so the last possible part never includes the final character. This causes it to miss valid partitions like 100 -> 10+0 or 1296 -> 1+29+6. Response A is correct.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 790,
+  "cache_hit_tokens": 640,
+  "completion_tokens": 167,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 167,
+   "prompt_tokens": 790,
+   "total_tokens": 957,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 640,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 640,
+   "prompt_cache_miss_tokens": 150
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:12:19.158915+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00012462,
+ "latency_s": 1.687
+}

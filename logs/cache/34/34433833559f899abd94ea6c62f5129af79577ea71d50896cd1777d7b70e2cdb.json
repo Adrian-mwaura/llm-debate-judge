@@ -1,0 +1,63 @@
+{
+ "key": "34433833559f899abd94ea6c62f5129af79577ea71d50896cd1777d7b70e2cdb",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nVanya and Vova are playing a game. Players are given an integer $n$. On their turn, the player can add $1$ to the current integer or subtract $1$. The players take turns; Vanya starts. If after Vanya's move the integer is divisible by $3$, then he wins. If $10$ moves have passed and Vanya has not won, then Vova wins.\n\nWrite a program that, based on the integer $n$, determines who will win if both players play optimally.\n\nInput\n\nThe first line contains the integer $t$ ($1 \\leq t \\leq 100$) — the number of test cases.\n\nThe single line of each test case contains the integer $n$ ($1 \\leq n \\leq 1000$).\n\nOutput\n\nFor each test case, print \"First\" without quotes if Vanya wins, and \"Second\" without quotes if Vova wins.Sample Input 1:\n6\n\n1\n\n3\n\n5\n\n100\n\n999\n\n1000\n\n\n\nSample Output 1:\n\nFirst\nSecond\nFirst\nFirst\nSecond\nFirst\n\n\n# Response A\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    if n % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nt = int(data[0])\nresults = []\n\nfor i in range(1, t + 1):\n    n = int(data[i])\n    results.append(determine_winner(n))\n\nfor result in results:\n    print(result)\n\n# Response B\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    # Check if Vanya can win in the first move\n    if (n + 1) % 3 == 0 or (n - 1) % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\ndef main():\n    import sys\n    input = sys.stdin.read\n    data = input().split()\n    \n    t = int(data[0])\n    results = []\n    for i in range(1, t + 1):\n        n = int(data[i])\n        results.append(determine_winner(n))\n    \n    for result in results:\n        print(result)\n\nif __name__ == \"__main__\":\n    main()\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 32000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "high",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\": \"Vanya wins immediately if he can move from n to a multiple of 3, i.e., if n mod 3 is 1 or 2. If n mod 3 is 0, Vanya cannot win on his first move. Vova can always respond by moving back to a multiple of 3, preventing Vanya from ever getting a winning move. This matches all sample cases, while Response A incorrectly says n divisible by 3 gives First.\", \"winner\": \"B\"}",
+  "reasoning": "We need answer judge. Need determine correct. Need reason carefully. Game. Need decide which response correct. Problem known Codeforces? Vanya and Vova? Maybe \"Vanya and Vova\" CF 492? Let's analyze.\n\nGame: Given integer n. Turn add/subtract 1. Vanya starts. If after Vanya's move integer divisible by 3, he wins. If 10 moves passed and Vanya not won, Vova wins. Both optimal. Need winner for n 1..1000. Sample: n=1 First, n=3 Second, n=5 First, n=100 First, n=999 Second, n=1000 First.\n\nWe need determine winner. Response A says First iff n%3==0. That would for 3 First, sample Second. Wrong. Response B says First iff (n+1)%3==0 or (n-1)%3==0, i.e., n mod3 !=0? Let's test sample:\nn=1: (2%3=2, 0%3=0) true First yes.\nn=3: (4%3=1,2%3=2) false Second yes.\nn=5: (6%3=0 true) First yes.\nn=100: 101%3=2,99%3=0 true First yes.\nn=999: 1000%3=1,998%3=2 false Second yes.\nn=1000: 1001%3=2,999%3=0 true First yes.\nMatches sample. But need ensure with 10 moves and optimal play? It seems immediate: Vanya can win on first move if n±1 divisible by3. That is n mod3 !=0. If n divisible by3, no move makes divisible by3 (since +/-1 changes mod). Vova can then? But Vova moves after; Vanya could win on his later moves if Vova doesn't prevent? Need analyze game for n divisible by3. Vanya moves to n±1 (mod1 or2). Vova can move? Vova wants avoid Vanya after his next move? Actually Vanya wins if after his own move divisible by3. Vova can on his turn choose ±1. If n after Vanya's move is mod1, Vova can subtract 1 to make mod0? Wait that's Vova's move, but Vanya only wins after Vanya's move, not Vova. Vova might force state before Vanya move such that Vanya can reach divisible? If n mod3=1 before Vanya, Vanya can subtract1 to mod0 win. If n mod3=2, Vanya can add1. So if starting Vanya turn mod !=0, he wins immediately. Vova wants after his move (i.e., at start of Vanya turn) n mod3=0, to deny immediate win. If initial n mod3=0, Vanya moves to mod1 or2. Vova can adjust to mod0: if Vanya made mod1, Vova subtract1 to mod0; if Vanya made mod2, Vova add1 to mod0. Then Vanya cannot win immediately, repeat. For 10 moves: Vanya starts move 1, Vova move2, ... If Vanya not won by 10 moves, Vova wins. For n mod3=0, if Vova can always restore mod0 after his moves. But what about at move 9? Vanya? Let's count: Moves passed: after 10 moves total. Vanya moves odd (1,3,5,7,9), Vova even (2,4,6,8,10). If Vanya hasn't won after his moves. Vova wins after 10 moves. Vova can ensure Vanya never sees mod !=0 at start of his turns? Initial n mod0 at Vanya turn 1. Vanya moves to mod1/2. No win. Vova restores mod0. Vanya turn 3 sees mod0 again. Repeats. Vanya never wins. Vova wins. So B correct. But wait if Vova at last move 10? Doesn't matter. Yes.\n\nNeed provide JSON only. reasoning max 100 words. winner B. Need ensure exact format.",
+  "finish_reason": "stop",
+  "prompt_tokens": 630,
+  "cache_hit_tokens": 128,
+  "completion_tokens": 1015,
+  "reasoning_tokens": 909,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 1015,
+   "prompt_tokens": 630,
+   "total_tokens": 1645,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 909,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 128,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 128,
+   "prompt_cache_miss_tokens": 502
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:27:31.637309+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.000684684,
+ "latency_s": 6.016
+}

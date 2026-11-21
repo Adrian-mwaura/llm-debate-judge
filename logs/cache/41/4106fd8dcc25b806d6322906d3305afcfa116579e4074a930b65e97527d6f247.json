@@ -1,0 +1,63 @@
+{
+ "key": "4106fd8dcc25b806d6322906d3305afcfa116579e4074a930b65e97527d6f247",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nA subarray is a continuous part of array.\n\nYarik recently found an array $a$ of $n$ elements and became very interested in finding the maximum sum of a non empty subarray. However, Yarik doesn't like consecutive integers with the same parity, so the subarray he chooses must have alternating parities for adjacent elements.\n\nFor example, $[1, 2, 3]$ is acceptable, but $[1, 2, 4]$ is not, as $2$ and $4$ are both even and adjacent.\n\nYou need to help Yarik by finding the maximum sum of such a subarray.\n\nInput\n\nThe first line contains an integer $t$ $(1 \\le t \\le 10^4)$ — number of test cases. Each test case is described as follows.\n\nThe first line of each test case contains an integer $n$ $(1 \\le n \\le 2 \\cdot 10^5)$ — length of the array.\n\nThe second line of each test case contains $n$ integers $a_1, a_2, \\dots, a_n$ $(-10^3 \\le a_i \\le 10^3)$ — elements of the array.\n\nIt is guaranteed that the sum of $n$ for all test cases does not exceed $2 \\cdot 10^5$.\n\nOutput\n\nFor each test case, output a single integer — the answer to the problem.Sample Input 1:\n7\n\n5\n\n1 2 3 4 5\n\n4\n\n9 9 8 8\n\n6\n\n-1 4 -1 0 5 -4\n\n4\n\n-1 2 4 -3\n\n1\n\n-1000\n\n3\n\n101 -99 101\n\n20\n\n-10 5 -8 10 6 -10 7 9 -2 -6 7 2 -4 6 -1 7 -6 -7 4 1\n\n\n\nSample Output 1:\n\n15\n17\n8\n4\n-1000\n101\n10\n\n\n# Response A\n\n# YOUR CODE HERE\ndef max_alternating_subarray_sum(arr):\n    n = len(arr)\n    max_sum = float('-inf')\n    \n    for start in range(n):\n        current_sum = 0\n        for i in range(start, n):\n            if (i - start) % 2 == 0:  # Even index (relative to start)\n                if i > start and arr[i] % 2 == arr[i-1] % 2:\n                    break\n            else:  # Odd index (relative to start)\n                if arr[i] % 2 == arr[i-1] % 2:\n                    break\n            current_sum += arr[i]\n            max_sum = max(max_sum, current_sum)\n    \n    return max_sum\n\nt = int(input())\nfor _ in range(t):\n    n = int(input())\n    arr = list(map(int, input().split()))\n    print(max_alternating_subarray_sum(arr))\n\n# Response B\n\n# YOUR CODE HERE\ndef solve():\n    n = int(input())\n    a = list(map(int, input().split()))\n    \n    even_max = odd_max = float('-inf')\n    even_sum = odd_sum = 0\n    \n    max_sum = float('-inf')\n    \n    for i in range(n):\n        if i % 2 == 0:\n            even_sum = max(a[i], even_sum + a[i])\n            even_max = max(even_max, even_sum)\n            odd_sum = odd_max + a[i]\n        else:\n            odd_sum = max(a[i], odd_sum + a[i])\n            odd_max = max(odd_max, odd_sum)\n            even_sum = even_max + a[i]\n        \n        max_sum = max(max_sum, even_sum, odd_sum)\n    \n    return max_sum\n\nt = int(input())\nfor _ in range(t):\n    print(solve())\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 32000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "high",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\":\"Response B is logically incorrect: for [9,9,8,8], it can combine adjacent equal-parity elements and output 18 or 26 instead of 17. Response A checks all subarrays and breaks when adjacent parities match, so it computes the correct maximum for the sample, even though it is inefficient.\",\"winner\":\"A\"}",
+  "reasoning": "We need answer judge. Need determine correct response. Need analyze both. Question Codeforces \"Yarik and Array\" maybe 1957B? Actually problem 1957? Need maximum sum non-empty subarray with adjacent alternating parity. Known solution: Kadane grouping by parity alternation: if parity changes, can extend; if same parity, reset; but can also include negative etc. Standard: cur = max(a[i], cur + a[i]) if parity alternates else a[i]; ans max. Or compress? Let's inspect Response A: It does O(n^2) nested start, breaks when same parity adjacent. For each start it builds alternating segment and takes max prefix sum among starts. Does this compute max sum contiguous subarray with alternating parities? It loops start, then extends while adjacent alternates; current_sum cumulative; max_sum all prefixes. This is O(n^2), may TLE for n sum 2e5 (worst single 2e5 => 4e10 impossible). If judged correctness only but performance part of correctness for constraints. It would not pass time. Also parity check using arr[i] % 2 for negative in Python? Python modulo -1 %2=1, -2%2=0, same parity correct: -1 odd, -2 even, okay. For i-start even branch check if i>start and parity same; odd branch same; essentially checks same parity for all i>start. Fine. But O(n^2) and likely TLE. The response is code only. Need decide which one correct among A and B. B algorithm? Need verify correctness.\n\nResponse B tries weird DP with even/odd positions relative to overall index, not parity of values. Let's test. It defines even_max, odd_max based on array index positions? For i even: even_sum = max(a[i], even_sum+a[i]) (standard Kadane over even positions? but adding to previous even position only? Wait even_sum tracks sum of alternating subarray ending at current i? It updates even_sum = max(a[i], even_sum + a[i]) irrespective of previous parity? odd_sum = odd_max + a[i]. Hmm.\n\nLet's understand B. State even/odd maybe based on value parity? But condition uses i%2, not a[i]%2. It seems suspicious/wrong.\n\nLet's run sample manually or via reasoning.\n\nTest case 1: a=[1,2,3,4,5], expected 15 (whole array alternating parity yes).\nB:\ninit even_max=odd_max=-inf; even_sum=odd_sum=0; max=-inf.\ni0 (even), a=1:\neven_sum=max(1,0+1=1)=1; even_max=max(-inf,1)=1; odd_sum=odd_max+1= -inf? float -inf +1 = -inf. max=1.\ni1 (odd), a=2:\nodd_sum=max(2, odd_sum+2=-inf+2=-inf)=2; odd_max=max(-inf,2)=2; even_sum=even_max+2=1+2=3; max=max(1,3,2)=3.\ni2 even a=3:\neven_sum=max(3, even_sum+3=3+3=6)=6; even_max=max(1,6)=6; odd_sum=odd_max+3=2+3=5; max=max(3,6,5)=6.\ni3 odd a=4:\nodd_sum=max(4, odd_sum+4=5+4=9)=9; odd_max=max(2,9)=9; even_sum=even_max+4=6+4=10; max=max(6,10,9)=10.\ni4 even a=5:\neven_sum=max(5, even_sum+5=10+5=15)=15; even_max=15; odd_sum=odd_max+5=9+5=14; max=15. Good.\n\nTest sample 2: [9,9,8,8] expected 17 (subarray [9,9? no same parity] Actually alternating parity needed. Values parities: odd, odd, even, even. Max single/subarray: [9] or [9] or [8,8? no]. Could choose [9,8] at positions 2,3 sum17, or [9,8] positions? yes. expected17. B:\ni0 a9 even:\neven_sum=max(9,0+9)=9; even_max=9; odd_sum=-inf; max9\ni1 a9 odd:\nodd_sum=max(9,-inf+9=-inf)=9; odd_max=9; even_sum=even_max+9=18; max18! Wait B gives even_sum=18 at i1, representing subarray positions 0-1 [9,9] sum18, invalid (same odd parity). max becomes 18. But expected 17. So B is wrong. Let's finish maybe later max? i2 a8 even:\neven_sum=max(8, even_sum+8=18+8=26)=26; even_max=max(9,26)=26; odd_sum=odd_max+8=9+8=17; max26. invalid. B fails.\n\nThus B incorrect. A is algorithmically correct (brute force) but O(n^2) too slow for constraints. Is \"correctness only: ignore length, style...\" ignore performance? We need decide which response is correct. The question likely from coding problem, responses are code. Exactly one correct. If A gives correct answer but inefficient, B wrong. Does A pass within constraints? O(n^2) not pass. Usually correctness includes expected complexity? The instruction \"ignore length, style...\". But should judge answer correctness; for programming problem, an O(n^2) solution exceeding constraints is not considered correct. Need determine whether A maybe optimized? It's clearly O(n^2), sum n 2e5, t 1e4; impossible. If only one correct, perhaps B is from known \"Yarik and Array\" but using positions? Need revisit B perhaps parity of values? Wait the code uses i % 2 to alternate positions, but maybe combined with even/odd_max? Let's analyze B more; maybe it's actually a known solution using position parity to enforce value parity? No, it doesn't check a_i parity. For array [9,9,8,8], B fails sample, so definitely incorrect. Thus A is the only one producing correct outputs (though TLE). The problem likely expects choose between two code answers; A correct logic but inefficient. If they ask \"which response is correct\", could consider A correct because outputs correct, despite time limit. But \"correct\" for competitive programming includes complexity. Need infer from dataset style: They present two responses and exactly one correct. The answer may be A if B has logical error. They often ignore performance? Actually question includes constraints; a response that times out is not correct. However if exactly one is correct and B is logically wrong, perhaps A is intended correct even if inefficient? Could be a flawed A not optimized; but if judge expects code to pass constraints, neither is correct, contradiction. So likely they consider A correct? Let's examine A more: It may have O(n^2) but perhaps due to parity alternation, break can be frequent? Worst-case alternating parity entire array => for each start, loop to end => O(n^2). n=2e5, impossible. So A would TLE. But maybe they don't enforce time in this meta-evaluation? They said \"ignore length, style, formatting and how confident a response sounds\" not \"ignore complexity\". Correctness only. Usually in code review, time complexity is correctness relative to requirements. But exactly one. Need pick intended. We need judge based on responses as written to problem. Which one is correct? B is wrong sample. A output correct. So winner A.\n\nNeed final JSON with reasoning <=100 words. Mention B fails sample [9,9,8,8], A brute force computes valid max (though inefficient). If we mention inefficiency might undermine. Need decide winner A. Ensure JSON only.\n\n",
+  "finish_reason": "stop",
+  "prompt_tokens": 970,
+  "cache_hit_tokens": 384,
+  "completion_tokens": 1800,
+  "reasoning_tokens": 1724,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 1800,
+   "prompt_tokens": 970,
+   "total_tokens": 2770,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 1724,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 384,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 384,
+   "prompt_cache_miss_tokens": 586
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:28:19.067428+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.0011690519999999999,
+ "latency_s": 11.297
+}

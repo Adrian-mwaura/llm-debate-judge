@@ -1,0 +1,63 @@
+{
+ "key": "10f7a585f9e704bd6430a3ad34cd5aa6a881cedcc5dd6478052111226fdc570d",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nVanya and Vova are playing a game. Players are given an integer $n$. On their turn, the player can add $1$ to the current integer or subtract $1$. The players take turns; Vanya starts. If after Vanya's move the integer is divisible by $3$, then he wins. If $10$ moves have passed and Vanya has not won, then Vova wins.\n\nWrite a program that, based on the integer $n$, determines who will win if both players play optimally.\n\nInput\n\nThe first line contains the integer $t$ ($1 \\leq t \\leq 100$) — the number of test cases.\n\nThe single line of each test case contains the integer $n$ ($1 \\leq n \\leq 1000$).\n\nOutput\n\nFor each test case, print \"First\" without quotes if Vanya wins, and \"Second\" without quotes if Vova wins.Sample Input 1:\n6\n\n1\n\n3\n\n5\n\n100\n\n999\n\n1000\n\n\n\nSample Output 1:\n\nFirst\nSecond\nFirst\nFirst\nSecond\nFirst\n\n\n# Response A\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    # Check if Vanya can win in the first move\n    if (n + 1) % 3 == 0 or (n - 1) % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\ndef main():\n    import sys\n    input = sys.stdin.read\n    data = input().split()\n    \n    t = int(data[0])\n    results = []\n    for i in range(1, t + 1):\n        n = int(data[i])\n        results.append(determine_winner(n))\n    \n    for result in results:\n        print(result)\n\nif __name__ == \"__main__\":\n    main()\n\n# Response B\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    if n % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nt = int(data[0])\nresults = []\n\nfor i in range(1, t + 1):\n    n = int(data[i])\n    results.append(determine_winner(n))\n\nfor result in results:\n    print(result)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 32000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "high",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\": \"Vanya wins immediately when n mod 3 is 1 or 2, since he can subtract or add 1 to reach a multiple of 3. If n mod 3 is 0, Vanya cannot win on his first move, and Vova can always move back to a multiple of 3, preventing Vanya from winning until 10 moves pass. Thus the correct rule is First for n mod 3 != 0 and Second for n mod 3 == 0. Response A implements this and matches the sample; Response B is reversed and fails the sample.\", \"winner\": \"A\"}",
+  "reasoning": "We need answer judge. Need determine correct. Need reason game. Need be careful. Question from Codeforces? \"Vanya and Vova game add/subtract 1, after Vanya move divisible by3 wins, if 10 moves passed and Vanya not won, Vova wins.\" Both optimal. Need determine winner based n.\n\nNeed compare responses A vs B. A outputs First if n±1 divisible by3, i.e. n mod3 !=? n+1 or n-1 divisible by3 means n ≡2 or1 mod3. So First unless n divisible by3. B outputs First if n divisible by3. Sample: n=1 First, n=3 Second, n=5 First, 100 First, 999 Second, 1000 First. A matches? n=1 -> (2%3=2,0 no) yes First. n=3 -> 4 no,2 no => Second. n=5 ->6 yes => First. n=100 mod3=1 ->99 yes First. n=999 mod3=0 => Second. n=1000 mod3=1 => First. A matches sample. B n=1 Second, sample First, so B wrong. But need ensure A correct for game including 10 moves? Let's analyze. It might be more nuanced if Vanya cannot win immediately but can force within 10? Sample suggests A. Let's understand game.\n\nVanya starts, can choose n+1 or n-1. If after Vanya's move integer divisible by 3, wins immediately. If initial n mod3:\n- n≡1: Vanya can subtract1 -> divisible by3, wins immediately. First.\n- n≡2: add1 -> divisible, wins. First.\n- n≡0: neither ±1 divisible by3 (n±1 ≡1/2), so no immediate. Then Vova moves. Vova wants prevent Vanya for 10 moves. Need see if Vanya can force later? On Vova turn, he can add/sub1. If after Vova move, does anything? Only Vanya wins after his move if divisible by3. Vova might be forced to give Vanya a winning position? State after Vanya's first move from multiple of3: n+1 (≡1) or n-1 (≡2). Vova can move ±1. If from n+1≡1, Vova can add1 -> n+2≡2 or subtract1 -> n≡0. If he leaves n≡0, then Vanya cannot win on next move? From n≡0, Vanya's ±1 not divisible, as above. If Vova leaves ≡? If Vanya starts a turn with m. Vanya wins immediately iff m≡1 or2? Actually m±1 divisible iff m mod3 =1 or2. If m mod3=0, cannot immediate. Vova can always on his turn choose move to return to multiple of3? Let's see if before Vova turn m is after Vanya no win, so m mod3=0 (because Vanya didn't win, and if m mod3 1/2, Vanya would have a winning move? Wait Vanya is the one moving and if he cannot or doesn't choose? Both optimal; if m mod3 1/2, Vanya can win immediately. Thus if game continues after Vanya turn, the integer is mod3=0). Then Vova can move ±1: resulting mod 1 or2, which would let Vanya win next turn! Wait after Vova move, it's Vanya's turn; if Vova leaves 1 or2, Vanya can win. So Vova wants avoid Vanya win, but from multiple of3, ±1 necessarily leaves 1 or2, allowing Vanya immediate win next turn. Unless Vova has no choice? This suggests if Vanya starts n≡0, after his first move n+1 or n-1 ≡1/2. Vova then can move to? Wait Vova moves from n±1 (≡1 or2). From there, Vova can choose ±1. If m≡1, m-1≡0, m+1≡2. To avoid giving Vanya win (which occurs if resulting mod 1 or2? Let's check Vanya's turn with resulting k. If k≡1, Vanya can subtract1 to divisible. If k≡2, Vanya can add1. If k≡0, Vanya cannot immediate). So Vova must choose resulting k≡0 if possible. From m≡1, subtract1 gives0. From m≡2, add1 gives0. So Vova can always restore to multiple of3. Then Vanya cannot win that turn; he moves to ±1, Vova restores. This repeats. After 10 moves, Vova wins. Thus n≡0 -> Second. That matches A.\n\nBut note \"If 10 moves have passed and Vanya has not won\" Move count includes both players? If n≡0, Vova can stall 10 moves, Vova wins. A says Second. Good.\n\nNeed output JSON only. Reasoning concise. Winner A. Need ensure no extra. At most 100 words.",
+  "finish_reason": "stop",
+  "prompt_tokens": 630,
+  "cache_hit_tokens": 0,
+  "completion_tokens": 1225,
+  "reasoning_tokens": 1095,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 1225,
+   "prompt_tokens": 630,
+   "total_tokens": 1855,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 1095,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 0,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 0,
+   "prompt_cache_miss_tokens": 630
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:27:17.369870+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.0008295,
+ "latency_s": 14.265
+}

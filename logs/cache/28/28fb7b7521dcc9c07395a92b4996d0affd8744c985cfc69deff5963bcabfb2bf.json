@@ -1,0 +1,57 @@
+{
+ "key": "28fb7b7521dcc9c07395a92b4996d0affd8744c985cfc69deff5963bcabfb2bf",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nSlavic is preparing a present for a friend's birthday. He has an array $a$ of $n$ digits and the present will be the product of all these digits. Because Slavic is a good kid who wants to make the biggest product possible, he wants to add $1$ to exactly one of his digits. \n\nWhat is the maximum product Slavic can make?\n\nInput\n\nThe first line contains a single integer $t$ ($1 \\leq t \\leq 10^4$) — the number of test cases.\n\nThe first line of each test case contains a single integer $n$ ($1 \\leq n \\leq 9$) — the number of digits.\n\nThe second line of each test case contains $n$ space-separated integers $a_i$ ($0 \\leq a_i \\leq 9$) — the digits in the array.\n\nOutput\n\nFor each test case, output a single integer — the maximum product Slavic can make, by adding $1$ to exactly one of his digits.Sample Input 1:\n4\n\n4\n\n2 2 1 2\n\n3\n\n0 1 2\n\n5\n\n4 3 2 3 4\n\n9\n\n9 9 9 9 9 9 9 9 9\n\n\n\nSample Output 1:\n\n16\n2\n432\n430467210\n\n\n# Response A\n\n# YOUR CODE HERE\ndef max_product(digits):\n    product = 1\n    min_digit = min(digits)\n    min_index = digits.index(min_digit)\n    \n    for i, digit in enumerate(digits):\n        if i == min_index:\n            product *= (digit + 1)\n        else:\n            product *= digit\n    \n    return product\n\nt = int(input())\nfor _ in range(t):\n    n = int(input())\n    digits = list(map(int, input().split()))\n    \n    if 0 in digits:\n        print(max_product(digits))\n    else:\n        original_product = 1\n        for digit in digits:\n            original_product *= digit\n        \n        max_prod = 0\n        for i in range(n):\n            new_digits = digits.copy()\n            new_digits[i] += 1\n            max_prod = max(max_prod, max_product(new_digits))\n        \n        print(max(original_product, max_prod))\n\n# Response B\n\n# YOUR CODE HERE\ndef max_product(digits):\n    product = 1\n    min_digit = min(digits)\n    min_index = digits.index(min_digit)\n    \n    for i, digit in enumerate(digits):\n        if i == min_index:\n            product *= (digit + 1)\n        else:\n            product *= digit\n    \n    return product\n\nt = int(input())\n\nfor _ in range(t):\n    n = int(input())\n    digits = list(map(int, input().split()))\n    \n    if 0 in digits:\n        print(max_product(digits))\n    else:\n        original_product = 1\n        for digit in digits:\n            original_product *= digit\n        \n        increased_product = max_product(digits)\n        print(max(original_product, increased_product))\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 8,
+ "response": {
+  "text": "{\"reasoning\": \"The correct approach is to add 1 to the smallest digit (to maximize product). Response B does this by calling max_product, which increments the minimum digit. For the zero case both use the same helper, but Response B's non-zero branch correctly computes and prints the max product, while Response A's non-zero branch unnecessarily loops but still ends up correct; however, A's logic is more convoluted and also prints max(original_product, max_prod), which could be wrong because you must add 1 exactly once, so original product isn't valid. For example [9,9,9] original product 729, but must be 810. Both would compute max_prod=810, and max(729,810)=810, so A still outputs correct. Both pass samples. But Response A's max_product inside loop calls index of min, which could increment wrong duplicate, but still usually fine. Actually B is cleaner and correct; A includes unnecessary original_product but final max still equals increased product since increased >= original? Not always: [0] -> 0 and 1; max gives 1. Increased product after adding to smallest is always >= original, so max is increased. So both correct? Need decide one. B is the standard solution.\", \"winner\": \"B\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 773,
+  "cache_hit_tokens": 639,
+  "completion_tokens": 268,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 268,
+   "prompt_tokens": 773,
+   "total_tokens": 1041,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 639,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 639,
+   "prompt_cache_miss_tokens": 134
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:19:53.030747+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00018281699999999997,
+ "latency_s": 2.609
+}
