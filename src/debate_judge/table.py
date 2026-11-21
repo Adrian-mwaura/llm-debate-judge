@@ -7,7 +7,7 @@ rebuilds every number in the report from a fresh clone.
   (cost_match_usd, off-peak list price, including the debater arguments the judge read), and the split rate
   (same shown position in both orders).
 - Same-cost comparisons (the proposal's rule): each method against votes_k<k> for the smallest odd k whose mean
-  cost per pair is at least the method's (full.matched_k), with Newcombe's paired interval and McNemar's test.
+  MEASURED mean cost per pair is at least the method's, with Newcombe's paired interval and McNemar's test.
   H1, the primary test: debate_high against its same-cost votes. Everything else is exploratory (no multiplicity
   correction), as agreed in Adrian's PR #11 review.
 - H2: debate_high against debate_low. H3: the H1 comparison by group (knowledge, rmc).
@@ -19,7 +19,7 @@ from collections import defaultdict
 from typing import Any, Iterable, Mapping, Sequence
 
 from debate_judge import stats
-from debate_judge.full import VOTE_KS, matched_k
+from debate_judge.full import VOTE_KS
 
 PRIMARY = "debate_high"
 METHODS = ("debate_high", "debate_low", "one_sided", "judge_low", "judge_high")
@@ -73,12 +73,14 @@ def condition_rows(conds: Mapping[str, Mapping], ids: set) -> list[dict]:
 
 
 def same_cost_votes(conds: Mapping[str, Mapping], method: str, ids: set) -> str | None:
-    """The votes condition that matches `method` under the proposal's rule, measured on these pairs."""
-    if "votes_k1" not in conds:
-        return None
-    weak = mean_cost(conds, "votes_k1", ids)
-    k = matched_k(mean_cost(conds, method, ids), weak, [k for k in VOTE_KS if f"votes_k{k}" in conds])
-    return f"votes_k{k}" if k is not None else None
+    """The votes condition that matches `method` under the proposal's rule: the smallest odd k whose MEASURED mean
+    cost per pair on these pairs is at least the method's. (k x the cost of one vote is only an estimate, because
+    vote lengths vary; full.matched_k uses that estimate for planning, the table uses the measured costs.)"""
+    target = mean_cost(conds, method, ids)
+    for k in sorted(k for k in VOTE_KS if f"votes_k{k}" in conds):
+        if mean_cost(conds, f"votes_k{k}", ids) >= target * (1 - 1e-9):
+            return f"votes_k{k}"
+    return None
 
 
 def comparisons(conds: Mapping[str, Mapping], pairs_by_id: Mapping[Any, Mapping] | None = None,

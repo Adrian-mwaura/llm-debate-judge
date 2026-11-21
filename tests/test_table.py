@@ -56,6 +56,21 @@ def test_same_cost_baseline_follows_the_proposal_rule(method, expected):
     assert table.same_cost_votes(conds, method, ids) == expected
 
 
+def test_baseline_uses_measured_vote_costs_not_k_times_one_vote():
+    # The real full run: one vote cost 0.000563, nine votes 0.00511 (lengths vary), debate high 0.00507.
+    # 9 x 0.000563 = 0.00507 is a hair short, but the measured cost of 9 votes is enough, so the rule picks 9.
+    recs = make_records()
+    for r in recs:
+        if r["condition"] == "votes_k1":
+            r["cost_match_usd"] = 0.000563
+        elif r["condition"] == "votes_k9":
+            r["cost_match_usd"] = 0.00511
+        elif r["condition"] == "debate_high":
+            r["cost_match_usd"] = 0.00507
+    conds = table.by_condition(recs)
+    assert table.same_cost_votes(conds, "debate_high", set(conds["judge_none"])) == "votes_k9"
+
+
 def test_debate_costing_more_than_nine_votes_uses_eleven():
     conds = table.by_condition(make_records(debate_cost=9.2 * WEAK_COST))
     assert table.same_cost_votes(conds, "debate_high", set(conds["judge_none"])) == "votes_k11"
