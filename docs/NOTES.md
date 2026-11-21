@@ -10,7 +10,8 @@ Put the newest entries first in each section.
   only `hand_label` changed) and PR #17 (proposal with the pilot result). Updated PR #15: built on #16, votes now go to k = 11, because
   the proposal's rule is "the smallest odd k costing at least as much as each protocol" and debate `high` cost 8.95 weak verdicts in
   the pilot, so k = 9 would be too small if the full run costs even slightly more. **No full run yet; the deadline is Mon 23 Nov.**
-  Balance US$8.45; full runs now estimated at about US$10.86, so top up before the debate group.
+  Then fixed Adrian's three #15 review points: the peak check now runs before every condition, and the concession checks are
+  in the printed spend and in the estimate (shared US$5.68, debate US$5.34, total US$11.02). Balance after top-up: US$18.45.
 - **2026-11-19:** **Final go/no-go: GO for question 6.** Adrian hand-labelled all 60 wrong-side pilot arguments blind (automatic verdict,
   topic and effort hidden, order shuffled): all 60 defend their assigned response, 0 concede at `low` and 0 at `high`. The hand labels agree
   with the automatic check on 60 of 60, so the automatic check can be trusted for the full run. `python scripts/run_pilot.py decide`
@@ -124,9 +125,12 @@ Put the newest entries first in each section.
 - [x] Adrian: fill `hand_label` for the 60 wrong-side rows in `results/pilot/concession_review.csv` and run
   `python scripts/run_pilot.py decide` (done 2026-11-19: GO; branch `adrian/pilot-labels`, PR #16, reviewed by Varun 2026-11-21).
 - [x] Evaluation lead (Varun): vote baseline and the full-run script (`scripts/run_full.py`, PR #15; votes up to k = 11).
-- [ ] Adrian: review and merge PR #15 (after Varun merges #16 and #17).
-- [ ] Both: top up at least US$5 (US$10 recommended) before the debate group.
-- [ ] Varun: `python scripts/run_full.py shared` (about US$5.68), then `python scripts/run_full.py debate` (about US$5.18). Weekends are off-peak.
+- [x] Varun merged #16 and #17 (2026-11-21 10:44).
+- [x] Varun: Adrian's three PR #15 review points (peak check before each condition; concession checks in the spend and in the estimate).
+- [ ] Adrian: approve and merge PR #15.
+- [x] Top up: balance US$18.45 on 2026-11-21 (US$10 added).
+- [ ] Varun: `python scripts/run_full.py shared` (about US$5.68), then `python scripts/run_full.py debate` (about US$5.34 incl.
+  concession checks). Weekends are off-peak.
 - [ ] Evaluation lead (Varun): `make_table.py` (results table with intervals and the H1 test at matched cost) and the accuracy-vs-cost plot.
 - [ ] Both: top up before the full runs. Balance US$8.50; the full runs on the 600 report pairs are estimated at about US$10.20 at
   list price from the pilot's costs (debates 4.81, votes up to 9 per order 2.69, thinking judge 2.11, one-sided 0.37, weak 0.22),
@@ -177,7 +181,8 @@ Put the newest entries first in each section.
 | 2026-11-18 | Varun | `run_pilot.py dry` (prompt dry run, off-peak, commit adf143e) | JudgeBench dry-run pairs, 20 (debaters on 5) | 0.1485 | 0.1487 |
 | 2026-11-16 | Varun | `check_model` (setup check, 6 tiny calls, all thinking levels, peak hours) | none; one arithmetic question | 0.0002 | 0.0002 |
 
-Account balances: Varun US$10.00 topped up (2026-11-16); US$8.50 left after the pilot (DeepSeek balance API, 2026-11-19).
+Account balances: Varun US$10.00 topped up (2026-11-16); US$8.50 left after the pilot (DeepSeek balance API, 2026-11-19);
+US$10.00 more added, balance US$18.45 (2026-11-21). Top-ups so far US$20; the US$30 cap is on spend, not on top-ups.
 
 ## Experiment log
 
@@ -203,6 +208,7 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-21 | Varun | Adrian's PR #15 review points (3) and 7 tests | Claude Code made them; tests check the peak check at the window edges and the weekend, that a run drifting into peak stops before the next condition with finished work saved, the concession-check estimate (pilot cost per call x 4 per pair) and that nested vote records are counted once in the spend; the new estimate (US$11.02) was run against the real pilot logs |
 | 2026-11-21 | Varun | Reviewed PR #16 and #17; updated PR #15 (rebased on #16, votes to k = 11) | Claude Code recomputed `decide` from Adrian's labelled CSV with the committed code (GO, 0/60 concessions, 60/60 agreement) and checked that no CSV cell other than `hand_label` changed; it checked the proposal's numbers (298/302 pairs, ±4 points, US$12) and found that the proposal's k rule needs votes beyond 9 |
 | 2026-11-19 | Adrian | Hand labels for the 60 wrong-side pilot arguments; final go/no-go | Adrian labelled by hand on a page Claude Code built from the committed pilot files: automatic verdict, topic and effort hidden, order shuffled, so the labels are an independent check. Claude Code checked the labels matched the 60 wrong-side rows, wrote them into the CSV (only `hand_label` changed), ran `decide`, and corrected the timestamp the PC clock got wrong |
 | 2026-11-19 | Adrian | Post-merge reviews of PR #11 and #12 | Claude Code read the code and checked the interval formulas against their published definitions; found the SciPy import that stops the whole suite, the too-blunt freeze check, the missing path from hand labels to the decision, the missing vote cap and the concession denominator; posted as PR comments |

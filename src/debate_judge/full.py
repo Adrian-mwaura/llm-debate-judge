@@ -158,11 +158,29 @@ def matched_k(condition_cost_per_pair: float, weak_cost_per_pair: float, ks: Seq
 # ---------------------------------------------------------------- budget
 
 
-def estimate_cost(pilot_summary: Mapping, condition: str, n_new_pairs: int, max_k: int = MAX_VOTE_K) -> float:
+CONCESSION = "concession_check"  # analysis only, not a condition; part of the debate group's spend
+CONCESSION_CALLS_PER_PAIR = 4    # 2 sides x 2 debater efforts
+
+
+def concession_cost_per_call(log_path: Path) -> float:
+    """Mean cost_match_usd of one concession-check call, from the pilot's call log."""
+    rows = load_records(log_path)
+    if not rows:
+        raise ValueError(f"no concession-check calls in {log_path}")
+    return sum(r["cost_match_usd"] for r in rows) / len(rows)
+
+
+def estimate_cost(pilot_summary: Mapping, condition: str, n_new_pairs: int, max_k: int = MAX_VOTE_K,
+                  concession_per_call: float | None = None) -> float:
     """List-price estimate for running `condition` on pairs the pilot did not already pay for.
 
     Uses the pilot's measured cost_match per pair. Real spend off-peak is at most this (cache hits are cheaper).
+    condition may also be CONCESSION, the concession checks of the debate group; it needs concession_per_call.
     """
+    if condition == CONCESSION:
+        if concession_per_call is None:
+            raise ValueError("estimating the concession checks needs concession_per_call (see concession_cost_per_call)")
+        return concession_per_call * CONCESSION_CALLS_PER_PAIR * n_new_pairs
     c = pilot_summary["conditions"]
     per_pair = {
         "judge_none": c["judge_none"]["cost_match_per_pair_incl_debaters"],
@@ -231,6 +249,26 @@ def run_conditions(pairs: Sequence[Mapping], conditions: Sequence[str], *, out_d
             done.setdefault(r["condition"], []).append(r)
         save_records(out_dir / "pairs.jsonl", recs)
     return done
+
+
+def peak_check(now, allow_peak: bool = False) -> None:
+    """Stop (SystemExit) at peak price unless allowed. run_full.py calls it at start-up and before every condition,
+    so a run that drifts into a weekday peak window stops cleanly; finished conditions are saved and cached."""
+    from debate_judge import llm
+
+    if llm.price_period(now) == "peak" and not allow_peak:
+        raise SystemExit(f"It is peak price now ({now:%H:%M} UTC). Run off-peak (before 09:00, 12:00-14:00 or after "
+                         "18:00 UTC+8, or any time at weekends). Finished conditions are saved and cached; rerun to continue.")
+
+
+def run_spend(done: Mapping[str, Sequence[Mapping]]) -> float:
+    """Real spend (cost_usd) of the conditions in one run, without double counting.
+
+    votes_k<k> records are nested (k=11 contains the samples of every smaller k), so only the largest k counts.
+    Concession checks are not in these records; add concessions.jsonl's cost_usd separately.
+    """
+    return sum(r["cost_usd"] for cond, recs in done.items() for r in recs
+               if not cond.startswith("votes_k") or r.get("k") == MAX_VOTE_K)
 
 
 def write_jsonl(path: Path, rows: Sequence[Mapping]) -> None:

@@ -1,5 +1,6 @@
 """The full run with a fake chat(): no API calls, no download."""
 import json
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -169,6 +170,51 @@ def test_matched_k_uses_eleven_when_debate_costs_slightly_more_and_none_beyond()
     assert full.matched_k(9.05, 1.0) == 11
     assert full.matched_k(9.0, 1.0) == 9
     assert full.matched_k(11.5, 1.0) is None
+
+
+# ---- Adrian's PR #15 review -------------------------------------------------------------
+
+
+@pytest.mark.parametrize("when,stops", [
+    (datetime(2026, 11, 23, 1, 30, tzinfo=timezone.utc), True),    # Mon 09:30 UTC+8, peak
+    (datetime(2026, 11, 23, 4, 30, tzinfo=timezone.utc), False),   # Mon 12:30 UTC+8
+    (datetime(2026, 11, 23, 6, 0, tzinfo=timezone.utc), True),     # Mon 14:00 UTC+8, peak starts
+    (datetime(2026, 11, 21, 3, 0, tzinfo=timezone.utc), False),    # Sat, off-peak all day
+])
+def test_peak_check(when, stops):
+    if stops:
+        with pytest.raises(SystemExit, match="peak price"):
+            full.peak_check(when)
+        full.peak_check(when, allow_peak=True)  # the override still works
+    else:
+        full.peak_check(when)
+
+
+def test_a_run_drifting_into_peak_stops_before_the_next_condition(tmp_path):
+    clock = iter([datetime(2026, 11, 23, 0, 30, tzinfo=timezone.utc),   # 08:30 UTC+8: off-peak
+                  datetime(2026, 11, 23, 1, 5, tzinfo=timezone.utc)])   # 09:05 UTC+8: peak
+    with pytest.raises(SystemExit):
+        full.run_conditions(make_pairs(4), ("judge_none", "votes"), out_dir=tmp_path, chat_fn=FakeChat(), workers=2,
+                            budget_check=lambda cond: full.peak_check(next(clock)), progress=lambda s: None)
+    assert {r["condition"] for r in full.load_records(tmp_path / "pairs.jsonl")} == {"judge_none"}
+
+
+def test_concession_checks_in_the_estimate(tmp_path):
+    log = tmp_path / "pilot_concession.jsonl"
+    full.write_jsonl(log, [{"cost_match_usd": 6e-5}, {"cost_match_usd": 8e-5}])
+    per_call = full.concession_cost_per_call(log)
+    assert per_call == pytest.approx(7e-5)
+    # 2 sides x 2 efforts per pair
+    assert full.estimate_cost(PILOT_SUMMARY, full.CONCESSION, 570, concession_per_call=per_call) == pytest.approx(
+        7e-5 * 4 * 570)
+    with pytest.raises(ValueError):
+        full.estimate_cost(PILOT_SUMMARY, full.CONCESSION, 570)
+
+
+def test_run_spend_counts_nested_votes_once():
+    done = {f"votes_k{k}": [{"cost_usd": k * 1.0, "k": k}] for k in full.VOTE_KS}
+    done["judge_none"] = [{"cost_usd": 0.5}]
+    assert full.run_spend(done) == pytest.approx(full.MAX_VOTE_K * 1.0 + 0.5)
 
 
 def test_go_decision():

@@ -177,8 +177,12 @@ Every change is reviewed by the other member in a pull request before it is merg
   Needed by question 6 and by the question-8 fallback, so it may run before the final go/no-go. About US$5.
 - `python scripts/run_full.py debate`: debate `high` and `low`, one-sided, and the automatic concession check.
   **Refuses without `go_no_go_final` = GO** (from `run_pilot.py decide`). About US$5.
-- Same freeze and peak checks as the pilot runner, plus a budget check before each condition: it reads the DeepSeek balance and
-  stops if the balance is below the estimate × 1.25. Finished conditions are saved; every call is cached, so just rerun.
+- The freeze check runs at start-up. **Before every condition** it repeats the peak check (`full.peak_check`, so a weekday run
+  that drifts into 09:00–12:00 or 14:00–18:00 UTC+8 stops cleanly) and a budget check: it reads the DeepSeek balance and stops
+  if the balance is below the estimate × 1.25. The debate group's estimate includes the concession checks (pilot cost per call
+  × 4 per pair). Finished conditions are saved; every call is cached, so just rerun.
+- The printed spend and `run_<group>.json` include the concession checks (`spend_usd_concession_checks`), so the figure for the
+  budget ledger matches the account.
 - Output: `results/full/pairs.jsonl`, one record per (pair, condition) with both decisions, `correct`, `outcome`, `first_slot`
   and `cost_match_usd` (the debater arguments the judge read are included; one-sided includes the one argument it shows),
   plus `concessions.jsonl` and `run_<group>.json`. Logs: `logs/calls/full_*.jsonl`.
