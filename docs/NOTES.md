@@ -131,7 +131,8 @@ Put the newest entries first in each section.
 - [x] Top up: balance US$18.45 on 2026-11-21 (US$10 added).
 - [ ] Varun: `python scripts/run_full.py shared` (about US$5.68), then `python scripts/run_full.py debate` (about US$5.34 incl.
   concession checks). Weekends are off-peak.
-- [ ] Evaluation lead (Varun): `make_table.py` (results table with intervals and the H1 test at matched cost) and the accuracy-vs-cost plot.
+- [x] Evaluation lead (Varun): `make_table.py` (results table with intervals and the H1 test at matched cost) and the accuracy-vs-cost plot
+  (branch `varun/make-table`). H1 is taken as debate `high` against its same-cost votes; Adrian to confirm in the PR.
 - [ ] Both: top up before the full runs. Balance US$8.50; the full runs on the 600 report pairs are estimated at about US$10.20 at
   list price from the pilot's costs (debates 4.81, votes up to 9 per order 2.69, thinking judge 2.11, one-sided 0.37, weak 0.22),
   so top up at least US$5 for headroom. `max`-effort debaters are not included.
@@ -208,6 +209,7 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-21 | Varun | `make_table.py`, `table.py` and 11 tests | Claude Code wrote them in a separate git worktree while the full run used the main one; tests on synthetic records with known answers check the proposal's same-cost rule (including the switch to 11 votes), that H1 detects a clear gain and none when there is none, the 400-pair restriction, and that the table and plot are written |
 | 2026-11-21 | Varun | Adrian's PR #15 review points (3) and 7 tests | Claude Code made them; tests check the peak check at the window edges and the weekend, that a run drifting into peak stops before the next condition with finished work saved, the concession-check estimate (pilot cost per call x 4 per pair) and that nested vote records are counted once in the spend; the new estimate (US$11.02) was run against the real pilot logs |
 | 2026-11-21 | Varun | Reviewed PR #16 and #17; updated PR #15 (rebased on #16, votes to k = 11) | Claude Code recomputed `decide` from Adrian's labelled CSV with the committed code (GO, 0/60 concessions, 60/60 agreement) and checked that no CSV cell other than `hand_label` changed; it checked the proposal's numbers (298/302 pairs, ±4 points, US$12) and found that the proposal's k rule needs votes beyond 9 |
 | 2026-11-19 | Adrian | Hand labels for the 60 wrong-side pilot arguments; final go/no-go | Adrian labelled by hand on a page Claude Code built from the committed pilot files: automatic verdict, topic and effort hidden, order shuffled, so the labels are an independent check. Claude Code checked the labels matched the 60 wrong-side rows, wrote them into the CSV (only `hand_label` changed), ran `decide`, and corrected the timestamp the PC clock got wrong |
