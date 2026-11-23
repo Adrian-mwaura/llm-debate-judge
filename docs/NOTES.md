@@ -6,6 +6,7 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-23:** PR #18 (full results, `make_table.py`) is merged. A fresh clone of `main` rebuilds the table with `python scripts/make_table.py` and all 199 tests pass there. The README still said the experiments were not built, so it was rewritten (branch `varun/readme`): result, one-command rebuild, the script order with the cost of each step, layout.
 - **2026-11-21:** **Full run done** (Varun, 11:08–12:01 UTC+8, off-peak weekend, commit `e386a90`, frozen against `prompts-v1`,
   US$8.68, matching the drop in the DeepSeek balance exactly). All 600 report pairs in every condition. `python scripts/make_table.py`:
   - Weak judge alone 70.5 [66.7, 74.0]; votes level off at 77–78 (k = 5 to 11); thinking judge 89.2 (`low`) and 89.7 (`high`).
@@ -236,6 +237,7 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-23 | Varun | Fresh-clone check of `main`; README rewrite | Checked in a fresh clone from GitHub that `make_table.py` rebuilds the table (only line endings differ from the committed files; the plot is byte-identical), that the tests pass and that the API key is in no tracked file; every command, link and number in the new README was checked against the repo |
 | 2026-11-21 | Varun | Full run and the first real results table | Claude Code ran both groups in the background with a keep-awake request, checked every condition has all 600 pairs, counted incomplete calls, checked the spend against the account balance (equal) and the logs for the API key (none), then built the table; reading the real table it caught that `make_table` chose 11 votes for H1 by estimating vote costs as k times one vote, fixed it to use measured costs (9 votes, as the rule says) and added a test with the real numbers |
 | 2026-11-21 | Varun | `make_table.py`, `table.py` and 11 tests | Claude Code wrote them in a separate git worktree while the full run used the main one; tests on synthetic records with known answers check the proposal's same-cost rule (including the switch to 11 votes), that H1 detects a clear gain and none when there is none, the 400-pair restriction, and that the table and plot are written |
 | 2026-11-21 | Varun | Adrian's PR #15 review points (3) and 7 tests | Claude Code made them; tests check the peak check at the window edges and the weekend, that a run drifting into peak stops before the next condition with finished work saved, the concession-check estimate (pilot cost per call x 4 per pair) and that nested vote records are counted once in the spend; the new estimate (US$11.02) was run against the real pilot logs |
