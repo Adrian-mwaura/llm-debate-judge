@@ -1,0 +1,57 @@
+{
+ "key": "5139674781f08c06b9627af292a9d230f53d3f44bc0700997d26d70cf2b6f2f0",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given a 0-indexed integer array nums.\nA subsequence of nums having length k and consisting of indices i_0 < i_1 < ... < i_k-1 is balanced if the following holds:\n\nnums[i_j] - nums[i_j-1] >= i_j - i_j-1, for every j in the range [1, k - 1].\n\nA subsequence of nums having length 1 is considered balanced.\nReturn an integer denoting the maximum possible sum of elements in a balanced subsequence of nums.\nA subsequence of an array is a new non-empty array that is formed from the original array by deleting some (possibly none) of the elements without disturbing the relative positions of the remaining elements.\n \nExample 1:\n\nInput: nums = [3,3,5,6]\nOutput: 14\nExplanation: In this example, the subsequence [3,5,6] consisting of indices 0, 2, and 3 can be selected.\nnums[2] - nums[0] >= 2 - 0.\nnums[3] - nums[2] >= 3 - 2.\nHence, it is a balanced subsequence, and its sum is the maximum among the balanced subsequences of nums.\nThe subsequence consisting of indices 1, 2, and 3 is also valid.\nIt can be shown that it is not possible to get a balanced subsequence with a sum greater than 14.\nExample 2:\n\nInput: nums = [5,-1,-3,8]\nOutput: 13\nExplanation: In this example, the subsequence [5,8] consisting of indices 0 and 3 can be selected.\nnums[3] - nums[0] >= 3 - 0.\nHence, it is a balanced subsequence, and its sum is the maximum among the balanced subsequences of nums.\nIt can be shown that it is not possible to get a balanced subsequence with a sum greater than 13.\n\nExample 3:\n\nInput: nums = [-2,-1]\nOutput: -1\nExplanation: In this example, the subsequence [-1] can be selected.\nIt is a balanced subsequence, and its sum is the maximum among the balanced subsequences of nums.\n\n \nConstraints:\n\n1 <= nums.length <= 10^5\n-10^9 <= nums[i] <= 10^9\n\n# Response A\n\nclass Solution:\n    def maxBalancedSubsequenceSum(self, nums: List[int]) -> int:\n        n = len(nums)\n        \n        # Create a list of tuples (nums[i] - i, i)\n        diff_index = [(nums[i] - i, i) for i in range(n)]\n        \n        # Sort the list based on nums[i] - i\n        diff_index.sort()\n        \n        # Binary Indexed Tree (Fenwick Tree) for efficient range sum queries\n        bit = [0] * (n + 1)\n        \n        def update(index, value):\n            index += 1\n            while index <= n:\n                bit[index] = max(bit[index], value)\n                index += index & (-index)\n        \n        def query(index):\n            index += 1\n            result = 0\n            while index > 0:\n                result = max(result, bit[index])\n                index -= index & (-index)\n            return result\n        \n        # Mapping of original indices to sorted indices\n        index_map = {v[1]: i for i, v in enumerate(diff_index)}\n        \n        max_sum = float('-inf')\n        \n        for num, i in diff_index:\n            current_sum = nums[i] + query(index_map[i])\n            max_sum = max(max_sum, current_sum)\n            update(index_map[i], current_sum)\n        \n        return max_sum\n\n# Response B\n\nclass Solution:\n    def maxBalancedSubsequenceSum(self, nums: List[int]) -> int:\n        n = len(nums)\n        \n        # Create a list of tuples (nums[i] - i, i)\n        adjusted = [(nums[i] - i, i) for i in range(n)]\n        \n        # Sort the adjusted list\n        adjusted.sort()\n        \n        # Binary Indexed Tree (Fenwick Tree) for efficient range sum queries\n        bit = [0] * (n + 1)\n        \n        def update(index, value):\n            index += 1\n            while index <= n:\n                bit[index] = max(bit[index], value)\n                index += index & (-index)\n        \n        def query(index):\n            index += 1\n            result = 0\n            while index > 0:\n                result = max(result, bit[index])\n                index -= index & (-index)\n            return result\n        \n        # Coordinate compression\n        compressed = {v: i for i, v in enumerate(sorted(set(i for _, i in adjusted)))}\n        \n        max_sum = float('-inf')\n        \n        for diff, i in adjusted:\n            current_sum = nums[i] + query(compressed[i])\n            max_sum = max(max_sum, current_sum)\n            update(compressed[i], current_sum)\n        \n        return max_sum\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 4,
+ "response": {
+  "text": "{\"reasoning\": \"The problem requires the subsequence condition nums[i_j] - nums[i_{j-1}] >= i_j - i_{j-1}, which is equivalent to nums[i_j] - i_j >= nums[i_{j-1}] - i_{j-1}. So we need a non-decreasing subsequence of values a[i] = nums[i]-i. The DP is dp[i] = nums[i] + max(dp[j]) over j with a[j] <= a[i] and j < i. Processing in sorted order of a works if ties are handled correctly (same a can chain, so order among equal a by index). Response B uses compressed[i] where i is the original index, which is wrong—it should compress by diff value, not by original index. Also query uses compressed[i] but update same; B maps index i to a coordinate based on sorted original indices, which doesn't correspond to diff ordering. Actually both A and B use index_map[i]/compressed[i] based on original index i, but that's incorrect: they should query over diff values. Wait, let me re-examine. A: index_map maps original index to position in sorted diff_index. Then query(index_map[i]) queries BIT at that position. But that position is arbitrary relative to diff value—it's the rank of index i in the sorted order, not the rank of diff. That's wrong. Similarly B. Both seem wrong in the same way? Let me check: In A, diff_index sorted by (diff, i). index_map[i] = position of i in sorted list. BIT stores dp values indexed by that position. For querying max over j with diff[j] <= diff[i], we'd need prefix up to the rank of diff[i], but index_map[i] is the rank of i itself, which for equal diffs might be fine but for different diffs it's not ordered by diff. Actually since sorted by diff, positions are ordered by diff. So index_map[i] is the position of i, which is within the range of diff[i]. Querying prefix up to index_map[i] includes all positions <= that, which are diffs <= diff[i] (or equal). That works! Because sorted order ensures prefix by position corresponds to diffs <=. So both A and B are essentially the same? A: index_map[i] is position in sorted diff_index. B: compressed[i] = position of original index i in sorted set of original indices—that's just rank of i by index value, not by diff! Wait B: `compressed = {v: i for i, v in enumerate(sorted(set(i for _, i in adjusted)))}` — here v is the original index i, and it maps i to its rank among original indices. That's not sorted by diff. So B is wrong. A is correct. Let me double check A: `index_map = {v[1]: i for i, v in enumerate(diff_index)}` — v[1] is original index i, mapped to position in sorted diff_index. Yes, position in sorted diff_index is ordered by diff. So query(index_map[i]) gives max over positions <= that, which are diffs <= diff[i] (with tie handling: equal diffs sorted by index, so earlier indices come first; since we process in sorted order, when processing i, all j with smaller diff already processed, and equal diff with smaller index processed. That's correct because j must be < i for equal diff? Actually condition a[j] <= a[i] allows equal diff regardless of index order. But if j > i and a[j] == a[i], then j comes after i in sorted order (since sorted by (diff, index)), so it won't be processed yet. That's fine—we only need j < i for valid subsequence? The original condition requires i_0 < i_1 < ... so j < i. So for equal diff, we need j < i, and sorted by index ensures j processed before i if j < i. If j > i with equal diff, it shouldn't be used for i (since j must be < i). So processing order by (diff, index) works: when processing i, all j with smaller diff processed, and equal diff with smaller index processed. Correct. So A is correct. B uses compressed by original index, which is wrong. Therefore A wins.\"}</reasoning>",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1191,
+  "cache_hit_tokens": 1024,
+  "completion_tokens": 922,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 922,
+   "prompt_tokens": 1191,
+   "total_tokens": 2113,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 1024,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 1024,
+   "prompt_cache_miss_tokens": 167
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:12:20.918976+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.0005813219999999999,
+ "latency_s": 6.453
+}

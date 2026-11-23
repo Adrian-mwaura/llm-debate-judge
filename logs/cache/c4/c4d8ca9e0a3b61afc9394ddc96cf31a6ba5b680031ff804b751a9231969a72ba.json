@@ -1,0 +1,57 @@
+{
+ "key": "c4d8ca9e0a3b61afc9394ddc96cf31a6ba5b680031ff804b751a9231969a72ba",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given a weighted simple connected undirected graph with N vertices and M edges, where vertices are numbered 1 to N, and edges are numbered 1 to M. Additionally, a positive integer K is given.\nEdge i\\ (1\\leq i\\leq M) connects vertices u_i and v_i and has a weight of w_i.\nFor a spanning tree T of this graph, the cost of T is defined as the sum, modulo K, of the weights of the edges in T.\nFind the minimum cost of a spanning tree of this graph.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN M K\nu_1 v_1 w_1\nu_2 v_2 w_2\n\\vdots\nu_M v_M w_M\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 2\\leq N\\leq8\n- N-1\\leq M\\leq\\dfrac{N(N-1)}2\n- 1\\leq K\\leq10^{15}\n- 1\\leq u_i\\lt v_i\\leq N\\ (1\\leq i\\leq M)\n- 0\\leq w_i\\lt K\\ (1\\leq i\\leq M)\n- The given graph is simple and connected.\n- All input values are integers.\n\nSample Input 1\n\n5 6 328\n1 2 99\n1 3 102\n2 3 86\n2 4 94\n2 5 95\n3 4 81\n\nSample Output 1\n\n33\n\nThe given graph is shown below:\n\nThe cost of the spanning tree containing edges 1,3,5,6 is (99+86+81+95)\\bmod{328}=361\\bmod{328}=33.\nThe cost of every spanning tree of this graph is at least 33, so print 33.\n\nSample Input 2\n\n6 5 998244353\n1 2 337361568\n1 6 450343304\n2 3 61477244\n2 5 745383438\n4 5 727360840\n\nSample Output 2\n\n325437688\n\nPrint the cost of the only spanning tree of this graph, which is  325437688.\n\nSample Input 3\n\n8 28 936294041850197\n1 2 473294720906780\n1 3 743030800139244\n1 4 709363019414774\n1 5 383643612490312\n1 6 557102781022861\n1 7 623179288538138\n1 8 739618599410809\n2 3 857687812294404\n2 4 893923168139714\n2 5 581822471860662\n2 6 740549363586558\n2 7 307226438833222\n2 8 447399029952998\n3 4 636318083622768\n3 5 44548707643622\n3 6 307262781240755\n3 7 12070267388230\n3 8 700247263184082\n4 5 560567890325333\n4 6 704726113717147\n4 7 588263818615687\n4 8 549007536393172\n5 6 779230871080408\n5 7 825982583786498\n5 8 713928998174272\n6 7 751331074538826\n6 8 449873635430228\n7 8 11298381761479\n\nSample Output 3\n\n11360716373\n\nNote that the input and the answer may not fit into a 32\\operatorname{bit} integer.\n\n# Response A\n\n# YOUR CODE HERE\nimport sys\nfrom itertools import combinations\n\ndef find(parent, i):\n    if parent[i] != i:\n        parent[i] = find(parent, parent[i])\n    return parent[i]\n\ndef union(parent, rank, x, y):\n    xroot = find(parent, x)\n    yroot = find(parent, y)\n    if rank[xroot] < rank[yroot]:\n        parent[xroot] = yroot\n    elif rank[xroot] > rank[yroot]:\n        parent[yroot] = xroot\n    else:\n        parent[yroot] = xroot\n        rank[xroot] += 1\n\ndef kruskal(N, edges, K):\n    parent = list(range(N + 1))\n    rank = [0] * (N + 1)\n    min_cost = float('inf')\n\n    for tree_edges in combinations(edges, N - 1):\n        cost = 0\n        parent = list(range(N + 1))\n        rank = [0] * (N + 1)\n        valid_tree = True\n\n        for u, v, w in tree_edges:\n            x = find(parent, u)\n            y = find(parent, v)\n            if x != y:\n                union(parent, rank, x, y)\n                cost = (cost + w) % K\n            else:\n                valid_tree = False\n                break\n\n        if valid_tree:\n            min_cost = min(min_cost, cost)\n\n    return min_cost\n\nN, M, K = map(int, input().split())\nedges = []\nfor _ in range(M):\n    u, v, w = map(int, input().split())\n    edges.append((u, v, w))\n\nresult = kruskal(N, edges, K)\nprint(result)\n\n# Response B\n\n# YOUR CODE HERE\nimport sys\nfrom itertools import combinations\n\ndef find(parent, i):\n    if parent[i] != i:\n        parent[i] = find(parent, parent[i])\n    return parent[i]\n\ndef union(parent, rank, x, y):\n    xroot = find(parent, x)\n    yroot = find(parent, y)\n    if rank[xroot] < rank[yroot]:\n        parent[xroot] = yroot\n    elif rank[xroot] > rank[yroot]:\n        parent[yroot] = xroot\n    else:\n        parent[yroot] = xroot\n        rank[xroot] += 1\n\ndef kruskal(N, edges, K):\n    parent = list(range(N + 1))\n    rank = [0] * (N + 1)\n    min_cost = float('inf')\n\n    for tree_edges in combinations(edges, N - 1):\n        cost = 0\n        parent = list(range(N + 1))\n        rank = [0] * (N + 1)\n        valid_tree = True\n\n        for u, v, w in tree_edges:\n            x = find(parent, u)\n            y = find(parent, v)\n            if x != y:\n                union(parent, rank, x, y)\n                cost = (cost + w) % K\n            else:\n                valid_tree = False\n                break\n\n        if valid_tree:\n            min_cost = min(min_cost, cost)\n\n    return min_cost\n\nN, M, K = map(int, input().split())\nedges = []\nfor _ in range(M):\n    u, v, w = map(int, input().split())\n    edges.append((u, v, w))\n\nresult = kruskal(N, edges, K)\nprint(result)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 9,
+ "response": {
+  "text": "{\"reasoning\": \"Both responses use the same approach: enumerate all combinations of N-1 edges and check if they form a spanning tree via union-find, computing cost modulo K and taking minimum. Both correctly handle the small N (≤8) and large K. The logic is identical and correct. No meaningful difference in correctness between them.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1653,
+  "cache_hit_tokens": 1408,
+  "completion_tokens": 76,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 76,
+   "prompt_tokens": 1653,
+   "total_tokens": 1729,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 1408,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 1408,
+   "prompt_cache_miss_tokens": 245
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:17:20.864383+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 8.657400000000002e-05,
+ "latency_s": 1.187
+}

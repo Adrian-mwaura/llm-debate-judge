@@ -1,0 +1,57 @@
+{
+ "key": "2f9cac5c725bcfef3f9192f5e67b15683f2265c98d9f935f01ba93270582b7f7",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nThere are N sellers and M buyers in an apple market.\nThe i-th seller may sell an apple for A_i yen or more (yen is the currency in Japan).\nThe i-th buyer may buy an apple for B_i yen or less.\nFind the minimum integer X that satisfies the following condition.\nCondition: The number of people who may sell an apple for X yen is greater than or equal to the number of people who may buy an apple for X yen.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN M\r\nA_1 \\ldots A_N\r\nB_1 \\ldots B_M\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1 \\leq N,M \\leq 2\\times 10^5\n- 1\\leq A_i,B_i \\leq 10^9\n- All input values are integers.\n\nSample Input 1\n\n3 4\r\n110 90 120\r\n100 80 120 10000\n\nSample Output 1\n\n110\r\n\nTwo sellers, the 1-st and 2-nd, may sell an apple for 110 yen; two buyers, the 3-rd and 4-th, may buy an apple for 110 yen.  Thus, 110 satisfies the condition.\nSince an integer less than 110 does not satisfy the condition, this is the answer.\n\nSample Input 2\n\n5 2\r\n100000 100000 100000 100000 100000\r\n100 200\n\nSample Output 2\n\n201\n\nSample Input 3\n\n3 2\r\n100 100 100\r\n80 120\n\nSample Output 3\n\n100\n\n# Response A\n\n# YOUR CODE HERE\nn, m = map(int, input().split())\nsellers = sorted(map(int, input().split()))\nbuyers = sorted(map(int, input().split()), reverse=True)\n\nleft, right = 1, 10**9 + 1\n\nwhile left < right:\n    mid = (left + right) // 2\n    sellers_count = n - bisect.bisect_left(sellers, mid)\n    buyers_count = bisect.bisect_left(buyers, mid, key=lambda x: -x)\n    \n    if sellers_count >= buyers_count:\n        right = mid\n    else:\n        left = mid + 1\n\nprint(left)\n\n# Response B\n\n# YOUR CODE HERE\nN, M = map(int, input().split())\nA = list(map(int, input().split()))\nB = list(map(int, input().split()))\n\nA.sort()\nB.sort(reverse=True)\n\nleft, right = 1, 10**9 + 1\n\nwhile left < right:\n    mid = (left + right) // 2\n    sellers = len([x for x in A if x <= mid])\n    buyers = len([x for x in B if x >= mid])\n    \n    if sellers >= buyers:\n        right = mid\n    else:\n        left = mid + 1\n\nprint(left)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 7,
+ "response": {
+  "text": "{\"reasoning\": \"Response A has a bug: it counts sellers with A_i >= mid, but the condition requires sellers who may sell for X, i.e., A_i <= X. Sorting buyers descending and using bisect with key=-x is also incorrect. Response B correctly counts sellers with A_i <= mid and buyers with B_i >= mid, then binary searches for the minimum X. Both use binary search over [1, 1e9+1], which is fine. Response B implements the condition correctly.\", \"winner\": \"B\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 751,
+  "cache_hit_tokens": 512,
+  "completion_tokens": 112,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 112,
+   "prompt_tokens": 751,
+   "total_tokens": 863,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 512,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 512,
+   "prompt_cache_miss_tokens": 239
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:14:17.276322+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00010458600000000002,
+ "latency_s": 1.187
+}

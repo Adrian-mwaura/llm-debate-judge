@@ -1,0 +1,57 @@
+{
+ "key": "bc57d3aa618d8f66f7b895ca11c470c6341f6852f818781a639c764e662a0ee6",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nSnuke the doctor prescribed N kinds of medicine for Takahashi.  For the next a_i days (including the day of the prescription), he has to take b_i pills of the i-th medicine.  He does not have to take any other medicine.\nLet the day of the prescription be day 1.  On or after day 1, when is the first day on which he has to take K pills or less?\n\nInput\n\nThe input is given from Standard Input in the following format:\nN K\r\na_1 b_1\r\n\\vdots\r\na_N b_N\n\nOutput\n\nIf Takahashi has to take K pills or less on day X for the first time on or after day 1, print X.\n\nConstraints\n\n\n- 1 \\leq N \\leq 3 \\times 10^5\n- 0 \\leq K \\leq 10^9\n- 1 \\leq a_i,b_i \\leq 10^9\n- All input values are integers.\n\nSample Input 1\n\n4 8\r\n6 3\r\n2 5\r\n1 9\r\n4 2\n\nSample Output 1\n\n3\r\n\nOn day 1, he has to take 3,5,9, and 2 pills of the 1-st, 2-nd, 3-rd, and 4-th medicine, respectively.  In total, he has to take 19 pills on this day, which is not K(=8) pills or less.\r\nOn day 2, he has to take 3,5, and 2 pills of the 1-st, 2-nd, and 4-th medicine, respectively.  In total, he has to take 10 pills on this day, which is not K(=8) pills or less.\r\nOn day 3, he has to take 3 and 2 pills of the 1-st and 4-th medicine, respectively.  In total, he has to take 5 pills on this day, which is K(=8) pills or less for the first time.  \nThus, the answer is 3.\n\nSample Input 2\n\n4 100\r\n6 3\r\n2 5\r\n1 9\r\n4 2\n\nSample Output 2\n\n1\n\nSample Input 3\n\n15 158260522\r\n877914575 2436426\r\n24979445 61648772\r\n623690081 33933447\r\n476190629 62703497\r\n211047202 71407775\r\n628894325 31963982\r\n822804784 50968417\r\n430302156 82631932\r\n161735902 80895728\r\n923078537 7723857\r\n189330739 10286918\r\n802329211 4539679\r\n303238506 17063340\r\n492686568 73361868\r\n125660016 50287940\n\nSample Output 3\n\n492686569\n\n# Response A\n\n# YOUR CODE HERE\nimport sys\nfrom collections import defaultdict\n\nN, K = map(int, input().split())\nmedicines = defaultdict(int)\n\nfor _ in range(N):\n    a, b = map(int, input().split())\n    medicines[a] += b\n\ndays = sorted(medicines.keys())\ntotal_pills = sum(medicines.values())\n\nif total_pills <= K:\n    print(1)\nelse:\n    current_day = 1\n    for day in days:\n        if day > current_day:\n            if total_pills <= K:\n                print(current_day)\n                break\n            current_day = day\n        total_pills -= medicines[day]\n        if total_pills <= K:\n            print(day + 1)\n            break\n    else:\n        print(days[-1] + 1)\n\n# Response B\n\n# YOUR CODE HERE\nimport sys\nfrom collections import defaultdict\n\nN, K = map(int, input().split())\nmedicines = defaultdict(int)\n\nfor _ in range(N):\n    a, b = map(int, input().split())\n    medicines[a] += b\n\ndays = sorted(medicines.keys())\ntotal_pills = sum(medicines.values())\n\nif total_pills <= K:\n    print(1)\nelse:\n    current_day = 1\n    for day in days:\n        if day > current_day:\n            if total_pills <= K:\n                print(current_day)\n                break\n            current_day = day\n        total_pills -= medicines[day]\n        if total_pills <= K:\n            print(current_day)\n            break\n    else:\n        print(max(days) + 1)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 10,
+ "response": {
+  "text": "{\"reasoning\": \"The core logic must find the first day total pills drop to <= K. Both responses aggregate by end day and subtract. The critical difference is the print statement when total_pills <= K after subtracting: Response A prints day + 1 (wrong, should be current day or the day after the drop point? Let's trace sample 1). Sample 1: total=19, days sorted [1,2,4,6]. Day1: subtract 9 =>10 >8; day2: subtract5=>5<=8, should print 3 (the day after day 2? Actually on day 3, medicine taken for a_i days starting day1; medicine with a=2 is taken days1-2. So on day3 they stop, total=5. First day <=8 is day3. So after subtracting at day=2, answer is day+1=3. Response A prints day+1=3 correct. Response B prints current_day which would be 1 or 2, wrong.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1110,
+  "cache_hit_tokens": 896,
+  "completion_tokens": 221,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 221,
+   "prompt_tokens": 1110,
+   "total_tokens": 1331,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 896,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 896,
+   "prompt_cache_miss_tokens": 214
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:10:34.605881+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.000167388,
+ "latency_s": 1.984
+}

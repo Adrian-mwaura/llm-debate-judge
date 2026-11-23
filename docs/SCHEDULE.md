@@ -31,15 +31,15 @@ Tick the boxes as tasks are done, in the same PR as the work or in `docs/NOTES.m
 
 - [ ] Both, by midday: go/no-go from the pilot (question 6, or switch to question 8); finish the proposal and merge it.
   *Go/no-go done late, Thu 19: GO for question 6. The proposal is still to finish.*
-- [ ] Adrian: full debate and one-sided runs on all 620 pairs.
-- [ ] Varun: vote baseline, cost matching and thinking-judge runs.
+- [x] Adrian: full debate and one-sided runs on all 620 pairs. *Done by Varun with `run_full.py`, Sat 21 (600 report pairs).*
+- [x] Varun: vote baseline, cost matching and thinking-judge runs. *Done late, Sat 21.*
 - [x] Varun: confidence intervals and paired tests (`stats.py`).
 
 ### Thu 19 Nov
 
 - [ ] Adrian: error analysis, concession counts and results by category.
 - [ ] Adrian: report sections Method and Analysis.
-- [ ] Varun: plots, one-command results table, budget ledger.
+- [x] Varun: plots, one-command results table, budget ledger. *Done late, Sat 21 (`scripts/make_table.py`).*
 - [ ] Varun: report sections Setup, Results and Limitations.
 
 ### Fri 20 Nov

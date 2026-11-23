@@ -1,0 +1,63 @@
+{
+ "key": "69240bb1f3e53c39342f498380bf6e9e8b43dfa1e84e60ee0ceb36522041ec3a",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nThere are zero or more sensors placed on a grid of H rows and W columns. Let (i, j) denote the square in the i-th row from the top and the j-th column from the left. \r\nWhether each square contains a sensor is given by the strings S_1, S_2, \\ldots, S_H, each of length W. (i, j) contains a sensor if and only if the j-th character of S_i is #.\r\nThese sensors interact with other sensors in the squares horizontally, vertically, or diagonally adjacent to them and operate as one sensor.\r\nHere, a cell (x, y) and a cell (x', y') are said to be horizontally, vertically, or diagonally adjacent if and only if \\max(|x-x'|,|y-y'|) = 1.\r\nNote that if sensor A interacts with sensor B and sensor A interacts with sensor C, then sensor B and sensor C also interact.\nConsidering the interacting sensors as one sensor, find the number of sensors on this grid.\n\nInput\n\nThe input is given from Standard Input in the following format:\nH W\r\nS_1\r\nS_2\r\n\\vdots\r\nS_H\n\nOutput\n\nPrint the answer.\n\nConstraints\n\n\n- 1 \\leq H, W \\leq 1000\n- H and W are integers.\n- S_i is a string of length W where each character is # or ..\n\nSample Input 1\n\n5 6\r\n.##...\r\n...#..\r\n....##\r\n#.#...\r\n..#...\n\nSample Output 1\n\n3\r\n\nWhen considering the interacting sensors as one sensor, the following three sensors exist:\n\n- The interacting sensors at (1,2),(1,3),(2,4),(3,5),(3,6)\n- The sensor at (4,1)\n- The interacting sensors at (4,3),(5,3)\n\nSample Input 2\n\n3 3\r\n#.#\r\n.#.\r\n#.#\n\nSample Output 2\n\n1\n\nSample Input 3\n\n4 2\r\n..\r\n..\r\n..\r\n..\n\nSample Output 3\n\n0\n\nSample Input 4\n\n5 47\r\n.#..#..#####..#...#..#####..#...#...###...#####\r\n.#.#...#.......#.#...#......##..#..#...#..#....\r\n.##....#####....#....#####..#.#.#..#......#####\r\n.#.#...#........#....#......#..##..#...#..#....\r\n.#..#..#####....#....#####..#...#...###...#####\n\nSample Output 4\n\n7\n\n# Response A\n\n# YOUR CODE HERE\nimport sys\n\ndef find_connected_components(grid):\n    H, W = len(grid), len(grid[0])\n    visited = [[False] * W for _ in range(H)]\n    \n    def dfs(i, j):\n        if i < 0 or i >= H or j < 0 or j >= W or visited[i][j] or grid[i][j] == '.':\n            return\n        visited[i][j] = True\n        for di in [-1, 0, 1]:\n            for dj in [-1, 0, 1]:\n                if di == 0 and dj == 0:\n                    continue\n                dfs(i + di, j + dj)\n\n    count = 0\n    for i in range(H):\n        for j in range(W):\n            if grid[i][j] == '#' and not visited[i][j]:\n                dfs(i, j)\n                count += 1\n    \n    return count\n\nH, W = map(int, input().split())\ngrid = [input().strip() for _ in range(H)]\n\nresult = find_connected_components(grid)\nprint(result)\n\n# Response B\n\n# YOUR CODE HERE\nimport sys\nfrom collections import deque\n\ndef count_sensors(grid):\n    H, W = len(grid), len(grid[0])\n    visited = [[False] * W for _ in range(H)]\n    count = 0\n\n    def bfs(i, j):\n        queue = deque([(i, j)])\n        visited[i][j] = True\n        while queue:\n            x, y = queue.popleft()\n            for dx in [-1, 0, 1]:\n                for dy in [-1, 0, 1]:\n                    if dx == 0 and dy == 0:\n                        continue\n                    nx, ny = x + dx, y + dy\n                    if 0 <= nx < H and 0 <= ny < W and grid[nx][ny] == '#' and not visited[nx][ny]:\n                        visited[nx][ny] = True\n                        queue.append((nx, ny))\n\n    for i in range(H):\n        for j in range(W):\n            if grid[i][j] == '#' and not visited[i][j]:\n                bfs(i, j)\n                count += 1\n\n    return count\n\nH, W = map(int, input().split())\ngrid = [input().strip() for _ in range(H)]\n\nresult = count_sensors(grid)\nprint(result)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 16000,
+  "extra_body": {
+   "thinking": {
+    "type": "enabled"
+   }
+  },
+  "reasoning_effort": "low",
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\":\"Both use 8-direction connectivity. Response A uses recursive DFS, which can exceed Python's recursion limit on large connected grids up to 1000x1000. Response B uses iterative BFS and handles maximum constraints safely. Therefore B is correct.\",\"winner\":\"B\"}",
+  "reasoning": "We need answer as judge. Need compare two responses. Both solve connected components with 8-neighborhood. Need decide correct. Potential issue Response A recursion DFS could hit recursion depth for 1000x1000 all # (1e6), Python recursion limit -> RecursionError. Also grid up to 1000, recursion depth up to 1e6. So A not robust. B BFS iterative correct. Need judge correctness only; A may fail on large input. B correct. Need JSON only. Reasoning concise. Ensure schema.",
+  "finish_reason": "stop",
+  "prompt_tokens": 1226,
+  "cache_hit_tokens": 0,
+  "completion_tokens": 170,
+  "reasoning_tokens": 110,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 170,
+   "prompt_tokens": 1226,
+   "total_tokens": 1396,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": null,
+    "audio_tokens": null,
+    "reasoning_tokens": 110,
+    "rejected_prediction_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 0,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 0,
+   "prompt_cache_miss_tokens": 1226
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:20:54.893909+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00028589999999999996,
+ "latency_s": 1.703
+}

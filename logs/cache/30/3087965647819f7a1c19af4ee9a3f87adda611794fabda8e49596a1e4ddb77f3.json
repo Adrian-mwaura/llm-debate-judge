@@ -1,0 +1,57 @@
+{
+ "key": "3087965647819f7a1c19af4ee9a3f87adda611794fabda8e49596a1e4ddb77f3",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given a string word and an integer k.\nA substring s of word is complete if:\n\nEach character in s occurs exactly k times.\nThe difference between two adjacent characters is at most 2. That is, for any two adjacent characters c1 and c2 in s, the absolute difference in their positions in the alphabet is at most 2.\n\nReturn the number of complete substrings of word.\nA substring is a non-empty contiguous sequence of characters in a string.\n \nExample 1:\n\nInput: word = \"igigee\", k = 2\nOutput: 3\nExplanation: The complete substrings where each character appears exactly twice and the difference between adjacent characters is at most 2 are: igigee, igigee, igigee.\n\nExample 2:\n\nInput: word = \"aaabbbccc\", k = 3\nOutput: 6\nExplanation: The complete substrings where each character appears exactly three times and the difference between adjacent characters is at most 2 are: aaabbbccc, aaabbbccc, aaabbbccc, aaabbbccc, aaabbbccc, aaabbbccc.\n\n \nConstraints:\n\n1 <= word.length <= 10^5\nword consists only of lowercase English letters.\n1 <= k <= word.length\n\n# Response A\n\nclass Solution:\n    def countCompleteSubstrings(self, word: str, k: int) -> int:\n        def count_valid_substrings(s):\n            result = 0\n            for length in range(1, 27):\n                if length * k > len(s):\n                    break\n                \n                count = [0] * 26\n                valid_chars = 0\n                \n                for i in range(len(s)):\n                    if i >= length * k:\n                        leaving = ord(s[i - length * k]) - ord('a')\n                        count[leaving] -= 1\n                        if count[leaving] == k - 1:\n                            valid_chars -= 1\n                        elif count[leaving] == 0:\n                            valid_chars += 1\n                    \n                    entering = ord(s[i]) - ord('a')\n                    count[entering] += 1\n                    if count[entering] == k:\n                        valid_chars += 1\n                    elif count[entering] == k + 1:\n                        valid_chars -= 1\n                    \n                    if i >= length * k - 1 and valid_chars == length:\n                        result += 1\n            \n            return result\n\n        def split_word(word):\n            result = []\n            start = 0\n            for i in range(1, len(word)):\n                if abs(ord(word[i]) - ord(word[i-1])) > 2:\n                    result.append(word[start:i])\n                    start = i\n            result.append(word[start:])\n            return result\n\n        return sum(count_valid_substrings(part) for part in split_word(word))\n\n# Response B\n\nclass Solution:\n    def countCompleteSubstrings(self, word: str, k: int) -> int:\n        def count_complete(s):\n            n = len(s)\n            result = 0\n            for unique in range(1, 27):\n                if unique * k > n:\n                    break\n                freq = [0] * 26\n                left = 0\n                count = 0\n                for right in range(n):\n                    freq[ord(s[right]) - ord('a')] += 1\n                    if freq[ord(s[right]) - ord('a')] == k:\n                        count += 1\n                    while right - left + 1 > unique * k:\n                        if freq[ord(s[left]) - ord('a')] == k:\n                            count -= 1\n                        freq[ord(s[left]) - ord('a')] -= 1\n                        left += 1\n                    if right - left + 1 == unique * k and count == unique:\n                        result += 1\n            return result\n\n        n = len(word)\n        segments = [0]\n        for i in range(1, n):\n            if abs(ord(word[i]) - ord(word[i-1])) > 2:\n                segments.append(i)\n        segments.append(n)\n\n        total = 0\n        for i in range(1, len(segments)):\n            total += count_complete(word[segments[i-1]:segments[i]])\n        \n        return total\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 7,
+ "response": {
+  "text": "{\"reasoning\": \"Response A's sliding-window logic is flawed: it fixes window length to length*k within a segment, but the count bookkeeping (valid_chars incremented/decremented incorrectly) doesn't correctly track whether each present character has exactly k occurrences, and the entering/leaving updates are misaligned. Response B uses a correct sliding window over exactly unique*k sized windows, tracking characters whose frequency equals k and checking count==unique, which correctly counts complete substrings. The segment splitting on adjacent difference >2 is correct in both. Thus B is correct.\", \"winner\": \"B\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1044,
+  "cache_hit_tokens": 896,
+  "completion_tokens": 124,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 124,
+   "prompt_tokens": 1044,
+   "total_tokens": 1168,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 896,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 896,
+   "prompt_cache_miss_tokens": 148
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:12:02.379991+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 9.928799999999999e-05,
+ "latency_s": 2.485
+}

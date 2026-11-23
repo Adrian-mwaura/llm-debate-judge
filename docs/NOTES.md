@@ -6,6 +6,21 @@ Put the newest entries first in each section.
 
 ## Status
 
+- **2026-11-21:** **Full run done** (Varun, 11:08–12:01 UTC+8, off-peak weekend, commit `e386a90`, frozen against `prompts-v1`,
+  US$8.68, matching the drop in the DeepSeek balance exactly). All 600 report pairs in every condition. `python scripts/make_table.py`:
+  - Weak judge alone 70.5 [66.7, 74.0]; votes level off at 77–78 (k = 5 to 11); thinking judge 89.2 (`low`) and 89.7 (`high`).
+  - Weak judge + debate 85.3 (`high`) and 85.2 (`low`); one-sided 75.5.
+  - **H1 (primary): debate `high` minus 9 votes at the same cost: +8.0 points [+4.6, +11.4], McNemar p = 7e-6. Supported.**
+  - H2: debaters `high` minus `low` +0.2 [-2.5, +2.8]: not supported; `low` debates are as good and cheaper.
+  - H3: the gain is +11.9 [+7.3, +16.7] on reasoning/math/coding and +4.0 [-1.0, +9.1] on knowledge: in the predicted direction.
+  - Exploratory: the thinking judge alone beats same-cost votes by 11–13 points, and is cheaper and better than debate.
+    One-sided is no better than same-cost votes (-2.3 [-6.1, +1.4]): the second argument is what helps.
+  - Split rate (verdict follows answer order): weak judge 21%, votes 14%, debate 8–9%, thinking judge 4–5%.
+  - The 400 pairs outside the pilot give the same picture (H1 +7.5 [+3.3, +11.7]).
+  - Concessions (automatic check): 0 of 600 wrong-side arguments at each effort. Incomplete calls: 165 of 13,200 vote calls
+    and 9 of 1,200 weak-judge calls hit the 1,000-token cap (missing votes; counted as missing verdicts), 0 incomplete arguments.
+  - `make_table.py` first picked 11 votes for H1 (k times the cost of one vote, an estimate); fixed to use measured vote costs, which
+    gives 9 under the proposal's rule. The conclusion is the same either way (+7.5 against 11 votes).
 - **2026-11-21:** Varun reviewed Adrian's PR #16 (hand labels and final GO: recomputed `decide` from his CSV independently, same result;
   only `hand_label` changed) and PR #17 (proposal with the pilot result). Updated PR #15: built on #16, votes now go to k = 11, because
   the proposal's rule is "the smallest odd k costing at least as much as each protocol" and debate `high` cost 8.95 weak verdicts in
@@ -127,15 +142,18 @@ Put the newest entries first in each section.
 - [x] Evaluation lead (Varun): vote baseline and the full-run script (`scripts/run_full.py`, PR #15; votes up to k = 11).
 - [x] Varun merged #16 and #17 (2026-11-21 10:44).
 - [x] Varun: Adrian's three PR #15 review points (peak check before each condition; concession checks in the spend and in the estimate).
-- [ ] Adrian: approve and merge PR #15.
+- [x] Adrian: approve and merge PR #15 (merged 2026-11-21 11:03).
 - [x] Top up: balance US$18.45 on 2026-11-21 (US$10 added).
-- [ ] Varun: `python scripts/run_full.py shared` (about US$5.68), then `python scripts/run_full.py debate` (about US$5.34 incl.
-  concession checks). Weekends are off-peak.
-- [ ] Evaluation lead (Varun): `make_table.py` (results table with intervals and the H1 test at matched cost) and the accuracy-vs-cost plot.
-- [ ] Both: top up before the full runs. Balance US$8.50; the full runs on the 600 report pairs are estimated at about US$10.20 at
-  list price from the pilot's costs (debates 4.81, votes up to 9 per order 2.69, thinking judge 2.11, one-sided 0.37, weak 0.22),
-  so top up at least US$5 for headroom. `max`-effort debaters are not included.
-- [ ] Both: add the pilot result line to `report/proposal.md`.
+- [x] Varun: full run, shared then debate (2026-11-21 11:08–12:01, US$8.68). Results on branch `varun/full-results`.
+- [x] Evaluation lead (Varun): `make_table.py` (results table with intervals and the H1 test at matched cost) and the accuracy-vs-cost plot
+  (branch `varun/make-table`). H1 is taken as debate `high` against its same-cost votes; Adrian to confirm in the PR.
+- [x] Both: add the pilot result line to `report/proposal.md` (Adrian, PR #17).
+- [ ] Adrian: review and merge `varun/make-table`, then `varun/full-results`.
+- [ ] Adrian: error analysis from `results/full/pairs.jsonl` and the logs (what debate fixes, what it breaks, one-sided, by category);
+  report sections Method and Analysis.
+- [ ] Varun: report sections Experiment setup, Results (Tables 1–2 and the plot from `results/full/`) and Limitations.
+- [ ] Both: Question and hypothesis, Collaboration; final edit to 6–8 pages; rebuild the table from a fresh clone; submit Mon 23 Nov.
+- Optional, budget left: `max`-effort debaters (about US$3 on 300 pairs), only if the report is on track.
 - [x] Method lead (Adrian): judge prompt and `judge_pair()` (branch `adrian/judge`).
 - [x] Dry-run the judge and debaters with the real API on `dry_run_pairs()` (done by Varun with the runner, 2026-11-18).
 - [x] Method lead (Adrian): debater prompt, one-round debate and one-sided argument (`debate.py`, PR #10).
@@ -177,16 +195,26 @@ Put the newest entries first in each section.
 
 | Date | Who | Run | Dataset and number of questions | Cost (US$) | Total so far (US$) |
 |---|---|---|---|---|---|
+| 2026-11-21 | Varun | `run_full.py debate` (debates high/low, one-sided, concession checks; weekend, commit e386a90) | JudgeBench report pairs, 600 | 4.8452 | 10.2230 |
+| 2026-11-21 | Varun | `run_full.py shared` (weak judge, votes k ≤ 11, thinking judge low/high; weekend, commit e386a90) | JudgeBench report pairs, 600 | 3.8298 | 5.3778 |
 | 2026-11-19 | Varun | `run_pilot.py pilot` (go/no-go pilot, off-peak, tag prompts-v1, commit 5509a74) | JudgeBench pilot pairs, 200 (debaters on 30) | 1.3993 | 1.5480 |
 | 2026-11-18 | Varun | `run_pilot.py dry` (prompt dry run, off-peak, commit adf143e) | JudgeBench dry-run pairs, 20 (debaters on 5) | 0.1485 | 0.1487 |
 | 2026-11-16 | Varun | `check_model` (setup check, 6 tiny calls, all thinking levels, peak hours) | none; one arithmetic question | 0.0002 | 0.0002 |
 
 Account balances: Varun US$10.00 topped up (2026-11-16); US$8.50 left after the pilot (DeepSeek balance API, 2026-11-19);
 US$10.00 more added, balance US$18.45 (2026-11-21). Top-ups so far US$20; the US$30 cap is on spend, not on top-ups.
+After the full run: balance US$9.77 (2026-11-21 12:05), a drop of US$8.68, matching the logged spend. Total spend US$10.22 of US$30.
 
 ## Experiment log
 
 <!-- One entry per run: date, who, git commit, settings, accuracy, cost, notes. -->
+
+- **2026-11-21, Varun, full run, commit `e386a90` (frozen against `prompts-v1`: judge-v1, debater-v1, concession-v1).** The 600 report pairs.
+  Weak judge: thinking off, temperature 1.0, max_tokens 1000; votes = samples 0–10 per order, majority of the first k for k = 1–11.
+  Thinking judge `low` (16000) and `high` (32000). Debaters `low` and `high`, one round, both sides; weak judge reading both arguments;
+  one-sided = one `high` argument (seed `one-sided-v1`). Automatic concession check on all 2,400 arguments.
+  Accuracy and tests: see Status above and `results/full/table.md`. Spend US$8.6750 (shared 3.8298, debate 4.8452 incl. concession
+  checks 0.1595). Outputs `results/full/` (pairs.jsonl, concessions.jsonl, table.md, table.csv, accuracy_vs_cost.png), logs `logs/calls/full_*.jsonl`.
 
 - **2026-11-19, Adrian, go/no-go decision (no API calls).** Hand labels for the 60 wrong-side pilot arguments in
   `results/pilot/concession_review.csv`; `python scripts/run_pilot.py decide` → `go_no_go_final`: GO (question 6).
@@ -208,6 +236,8 @@ Record entries here for the report's Collaboration section.
 
 | Date | Who | What | AI tools used and how the code was checked |
 |---|---|---|---|
+| 2026-11-21 | Varun | Full run and the first real results table | Claude Code ran both groups in the background with a keep-awake request, checked every condition has all 600 pairs, counted incomplete calls, checked the spend against the account balance (equal) and the logs for the API key (none), then built the table; reading the real table it caught that `make_table` chose 11 votes for H1 by estimating vote costs as k times one vote, fixed it to use measured costs (9 votes, as the rule says) and added a test with the real numbers |
+| 2026-11-21 | Varun | `make_table.py`, `table.py` and 11 tests | Claude Code wrote them in a separate git worktree while the full run used the main one; tests on synthetic records with known answers check the proposal's same-cost rule (including the switch to 11 votes), that H1 detects a clear gain and none when there is none, the 400-pair restriction, and that the table and plot are written |
 | 2026-11-21 | Varun | Adrian's PR #15 review points (3) and 7 tests | Claude Code made them; tests check the peak check at the window edges and the weekend, that a run drifting into peak stops before the next condition with finished work saved, the concession-check estimate (pilot cost per call x 4 per pair) and that nested vote records are counted once in the spend; the new estimate (US$11.02) was run against the real pilot logs |
 | 2026-11-21 | Varun | Reviewed PR #16 and #17; updated PR #15 (rebased on #16, votes to k = 11) | Claude Code recomputed `decide` from Adrian's labelled CSV with the committed code (GO, 0/60 concessions, 60/60 agreement) and checked that no CSV cell other than `hand_label` changed; it checked the proposal's numbers (298/302 pairs, ±4 points, US$12) and found that the proposal's k rule needs votes beyond 9 |
 | 2026-11-19 | Adrian | Hand labels for the 60 wrong-side pilot arguments; final go/no-go | Adrian labelled by hand on a page Claude Code built from the committed pilot files: automatic verdict, topic and effort hidden, order shuffled, so the labels are an independent check. Claude Code checked the labels matched the 60 wrong-side rows, wrote them into the CSV (only `hand_label` changed), ran `decide`, and corrected the timestamp the PC clock got wrong |

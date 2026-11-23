@@ -1,0 +1,57 @@
+{
+ "key": "bac26ccaaa5dd74e1ebece71da41667c779c3a7ac3ec59e44ebccbb17ca9ee0c",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nKeyence has N bases worldwide, numbered 1 to N.\r\nBase i has W_i employees, and at 0 o'clock in Coordinated Universal Time (UTC), it is X_i o'clock at base i.\nYou want to hold a one-hour meeting across the entire company.\r\nEach employee can only participate in the meeting if the meeting time is completely within the 9:00-18:00 time slot at their base. Find the maximum number of employees who can participate when deciding the meeting time to allow as many employees as possible to participate.\n\nInput\n\nThe input is given from Standard Input in the following format:\nN\r\nW_1 X_1\r\nW_2 X_2\r\n\\vdots\r\nW_N X_N\n\nOutput\n\nPrint the maximum number of employees who can participate in the meeting.\n\nConstraints\n\n\n- 1\\leq N \\leq 1000\n- 1\\leq W_i \\leq 10^6\n- 0\\leq X_i < 24\n- All input values are integers.\n\nSample Input 1\n\n3\r\n5 0\r\n3 3\r\n2 18\n\nSample Output 1\n\n8\r\n\nConsider holding the meeting from 14:00 to 15:00 in UTC.\n\n- The meeting is held from 14:00 to 15:00 at base 1, so the 5 employees at base 1 can participate in the meeting.\n- The meeting is held from 17:00 to 18:00 at base 2, so the 3 employees at base 2 can participate in the meeting.\n- The meeting is held from 8:00 to 9:00 at base 3, so the 2 employees at base 3 cannot participate in the meeting.\n\nThus, a total of 5+3=8 employees can participate in the meeting.\r\nNo meeting time allows more employees to participate.\n\nSample Input 2\n\n2\r\n1 10\r\n1000000 20\n\nSample Output 2\n\n1000000\n\nSample Input 3\n\n6\r\n31 3\r\n20 8\r\n11 5\r\n4 3\r\n47 14\r\n1 18\n\nSample Output 3\n\n67\n\n# Response A\n\n# YOUR CODE HERE\ndef max_participants():\n    N = int(input())\n    bases = []\n    for _ in range(N):\n        W, X = map(int, input().split())\n        bases.append((W, X))\n\n    max_employees = 0\n    for start_time in range(24):\n        end_time = (start_time + 1) % 24\n        current_employees = 0\n        for W, X in bases:\n            local_start = (start_time - X) % 24\n            local_end = (end_time - X) % 24\n            if local_start == local_end:\n                continue\n            if 9 <= local_start < 18 and 9 <= local_end <= 18:\n                current_employees += W\n        max_employees = max(max_employees, current_employees)\n\n    print(max_employees)\n\nmax_participants()\n\n# Response B\n\n# YOUR CODE HERE\ndef max_participants():\n    N = int(input())\n    bases = []\n    for _ in range(N):\n        W, X = map(int, input().split())\n        bases.append((W, X))\n\n    max_employees = 0\n    for start_time in range(24):\n        end_time = (start_time + 1) % 24\n        current_employees = 0\n        for W, X in bases:\n            local_start = (start_time - X) % 24\n            local_end = (end_time - X) % 24\n            if local_start < local_end:\n                if 9 <= local_start < 18 and 9 <= local_end <= 18:\n                    current_employees += W\n            else:\n                if (9 <= local_start < 24 and 0 <= local_end <= 18) or (9 <= local_start < 18):\n                    current_employees += W\n        max_employees = max(max_employees, current_employees)\n\n    print(max_employees)\n\nmax_participants()\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 4,
+ "response": {
+  "text": "{\"reasoning\": \"Response A checks local_start == local_end (never valid for a 1-hour meeting modulo 24 unless crossing boundaries, which is incorrectly skipped), and requires both start and end within [9,18), failing cases crossing midnight but response A also mishandles wrap. Actually the correct condition is simply checking whether the entire hour 9:00-18:00 contains the meeting: meeting occupies [local_start, local_start+1). We need 9 <= local_start and local_start+1 <= 18, i.e., 9 <= local_start <= 17. Response A's condition local_end <= 18 and local_start >= 9 with local_end = local_start+1 works for non-wrap; but when local_start=17, local_end=18, ok. When wrap occurs (start_time - X causing local_start=23 etc.) it fails. However, key flaw: skip when local_start==local_end; but also response B's wrap handling is flawed. Comparing: The meeting is valid for base if 9 <= local_start and local_start < 18 (since 1 hour fits only if start in 9..17). Simpler: condition is 9 <= local_start <= 17. Response A: local_end = local_start+1 mod 24; if local_start=17, local_end=18, condition local_end<=18 ok. if local_start=23, local_end=0, skipped due to local_end=0 <=18 but local_start=23 not <18, so fails. Both largely similar. But response B's else branch: if local_start < local_end? For local_start=17, local_end=18, goes into first branch ok. For local_start=23, local_end=0, else: condition (9<=23<24 and 0<=0<=18) true → counts base at local 23:00-24:00 as valid though 23:00 not within 9-18. That's wrong. Response A correctly requires local_start<18, so local 23 invalid. Thus A is correct. Also A's skip local_start==local_end only happens at local_start=23? Actually when start_time=23 and X=0: local_start=23, local_end=0; not equal. When start_time - X ≡ local_start, end differs by 1 always mod24, so no equality. So A is correct.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1014,
+  "cache_hit_tokens": 768,
+  "completion_tokens": 506,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 506,
+   "prompt_tokens": 1014,
+   "total_tokens": 1520,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 768,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 768,
+   "prompt_cache_miss_tokens": 246
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:18:46.454509+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.000342804,
+ "latency_s": 4.234
+}

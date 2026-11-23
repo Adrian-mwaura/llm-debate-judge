@@ -1,0 +1,57 @@
+{
+ "key": "bf1a964cdcc19fa9c768c1bb94867043ba918b57ef04a3670d9e2751b04235a9",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nVanya and Vova are playing a game. Players are given an integer $n$. On their turn, the player can add $1$ to the current integer or subtract $1$. The players take turns; Vanya starts. If after Vanya's move the integer is divisible by $3$, then he wins. If $10$ moves have passed and Vanya has not won, then Vova wins.\n\nWrite a program that, based on the integer $n$, determines who will win if both players play optimally.\n\nInput\n\nThe first line contains the integer $t$ ($1 \\leq t \\leq 100$) — the number of test cases.\n\nThe single line of each test case contains the integer $n$ ($1 \\leq n \\leq 1000$).\n\nOutput\n\nFor each test case, print \"First\" without quotes if Vanya wins, and \"Second\" without quotes if Vova wins.Sample Input 1:\n6\n\n1\n\n3\n\n5\n\n100\n\n999\n\n1000\n\n\n\nSample Output 1:\n\nFirst\nSecond\nFirst\nFirst\nSecond\nFirst\n\n\n# Response A\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    # Check if Vanya can win in the first move\n    if (n + 1) % 3 == 0 or (n - 1) % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\ndef main():\n    import sys\n    input = sys.stdin.read\n    data = input().split()\n    \n    t = int(data[0])\n    results = []\n    for i in range(1, t + 1):\n        n = int(data[i])\n        results.append(determine_winner(n))\n    \n    for result in results:\n        print(result)\n\nif __name__ == \"__main__\":\n    main()\n\n# Response B\n\n# YOUR CODE HERE\ndef determine_winner(n):\n    if n % 3 == 0:\n        return \"First\"\n    else:\n        return \"Second\"\n\nimport sys\ninput = sys.stdin.read\ndata = input().split()\n\nt = int(data[0])\nresults = []\n\nfor i in range(1, t + 1):\n    n = int(data[i])\n    results.append(determine_winner(n))\n\nfor result in results:\n    print(result)\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 0,
+ "response": {
+  "text": "{\"reasoning\": \"The game ends when after Vanya's move the number is divisible by 3. Vanya starts and can add or subtract 1. If n mod 3 == 0, Vanya cannot make it divisible by 3 in one move (n±1 mod 3 is 1 or 2), so he cannot win immediately. With optimal play, Vova can always keep the number away from multiples of 3? Actually, for n divisible by 3, any move gives n±1 not divisible by 3, so Vova receives a number ≡1 or 2 mod 3, and Vova can move to a multiple of 3? Wait, Vova moves after Vanya, but Vova doesn't win by making divisible by 3—only Vanya wins that way. However, if Vanya creates a multiple of 3, Vanya wins immediately on his move. If n is divisible by 3 initially, Vanya's move makes it non-divisible, so he doesn't win. Then Vova can move it back to a multiple of 3, but that doesn't make Vova win; then Vanya gets a multiple of 3 and again can't win immediately. This could loop. But 10 moves limit: after 10 moves total (Vanya and Vova each move 5 times), if Vanya hasn't won, Vova wins. So if Vanya cannot force a multiple of 3 on his move, Vova wins. Let's check sample: n=1 -> Vanya can subtract 1 to 0? 0 divisible by 3? Usually divisible by 3 includes 0, but n≥1, but moves can go to 0? Possibly. n=1: Vanya+1=2 not divisible, -1=0 divisible? 0%3==0, so First. n=3: Vanya can go to 2 or 4, neither divisible by 3, so Second. n=5: 5+1=6 divisible -> First. n=100: 100-1=99 divisible -> First. n=999: 999 divisible by 3 initially, Vanya can't win immediately -> Second. n=1000: 1000-1=999 divisible -> First. So rule: First if (n±1)%3==0, i.e., n mod 3 != 0? Actually n mod 3 == 0 -> Second; n mod 3 == 1 -> n-1 divisible by 3 -> First; n mod 3 == 2 -> n+1 divisible by 3 -> First. So First if n%3 != 0. Response A: checks (n+1)%3==0 or (n-1)%3==0 -> that's n%3 != 0. Response B: First if n%3==0 -> opposite. So A is correct.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 605,
+  "cache_hit_tokens": 0,
+  "completion_tokens": 615,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 615,
+   "prompt_tokens": 605,
+   "total_tokens": 1220,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 0,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 0,
+   "prompt_cache_miss_tokens": 605
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:08:04.131754+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00045975,
+ "latency_s": 15.891
+}

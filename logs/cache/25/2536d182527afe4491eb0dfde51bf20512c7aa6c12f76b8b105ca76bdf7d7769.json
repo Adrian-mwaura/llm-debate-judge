@@ -1,0 +1,57 @@
+{
+ "key": "2536d182527afe4491eb0dfde51bf20512c7aa6c12f76b8b105ca76bdf7d7769",
+ "request": {
+  "model": "deepseek-flash",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a careful judge. You decide which of two responses to a question is correct."
+   },
+   {
+    "role": "user",
+    "content": "Below are a question and two responses to it. Exactly one of the two responses is correct.\nDecide which one. Judge correctness only: ignore length, style, formatting and how confident a response sounds.\n\n# Question\n\nYou are given a 0-indexed integer array nums.\nA subsequence of nums having length k and consisting of indices i_0 < i_1 < ... < i_k-1 is balanced if the following holds:\n\nnums[i_j] - nums[i_j-1] >= i_j - i_j-1, for every j in the range [1, k - 1].\n\nA subsequence of nums having length 1 is considered balanced.\nReturn an integer denoting the maximum possible sum of elements in a balanced subsequence of nums.\nA subsequence of an array is a new non-empty array that is formed from the original array by deleting some (possibly none) of the elements without disturbing the relative positions of the remaining elements.\n \nExample 1:\n\nInput: nums = [3,3,5,6]\nOutput: 14\nExplanation: In this example, the subsequence [3,5,6] consisting of indices 0, 2, and 3 can be selected.\nnums[2] - nums[0] >= 2 - 0.\nnums[3] - nums[2] >= 3 - 2.\nHence, it is a balanced subsequence, and its sum is the maximum among the balanced subsequences of nums.\nThe subsequence consisting of indices 1, 2, and 3 is also valid.\nIt can be shown that it is not possible to get a balanced subsequence with a sum greater than 14.\nExample 2:\n\nInput: nums = [5,-1,-3,8]\nOutput: 13\nExplanation: In this example, the subsequence [5,8] consisting of indices 0 and 3 can be selected.\nnums[3] - nums[0] >= 3 - 0.\nHence, it is a balanced subsequence, and its sum is the maximum among the balanced subsequences of nums.\nIt can be shown that it is not possible to get a balanced subsequence with a sum greater than 13.\n\nExample 3:\n\nInput: nums = [-2,-1]\nOutput: -1\nExplanation: In this example, the subsequence [-1] can be selected.\nIt is a balanced subsequence, and its sum is the maximum among the balanced subsequences of nums.\n\n \nConstraints:\n\n1 <= nums.length <= 10^5\n-10^9 <= nums[i] <= 10^9\n\n# Response A\n\nclass Solution:\n    def maxBalancedSubsequenceSum(self, nums: List[int]) -> int:\n        n = len(nums)\n        \n        # Create a list of tuples (nums[i] - i, i)\n        diff_index = [(nums[i] - i, i) for i in range(n)]\n        \n        # Sort the list based on nums[i] - i\n        diff_index.sort()\n        \n        # Binary Indexed Tree (Fenwick Tree) for efficient range sum queries\n        bit = [0] * (n + 1)\n        \n        def update(index, value):\n            index += 1\n            while index <= n:\n                bit[index] = max(bit[index], value)\n                index += index & (-index)\n        \n        def query(index):\n            index += 1\n            result = 0\n            while index > 0:\n                result = max(result, bit[index])\n                index -= index & (-index)\n            return result\n        \n        # Mapping of original indices to sorted indices\n        index_map = {v[1]: i for i, v in enumerate(diff_index)}\n        \n        max_sum = float('-inf')\n        \n        for num, i in diff_index:\n            current_sum = nums[i] + query(index_map[i])\n            max_sum = max(max_sum, current_sum)\n            update(index_map[i], current_sum)\n        \n        return max_sum\n\n# Response B\n\nclass Solution:\n    def maxBalancedSubsequenceSum(self, nums: List[int]) -> int:\n        n = len(nums)\n        \n        # Create a list of tuples (nums[i] - i, i)\n        adjusted = [(nums[i] - i, i) for i in range(n)]\n        \n        # Sort the adjusted list\n        adjusted.sort()\n        \n        # Binary Indexed Tree (Fenwick Tree) for efficient range sum queries\n        bit = [0] * (n + 1)\n        \n        def update(index, value):\n            index += 1\n            while index <= n:\n                bit[index] = max(bit[index], value)\n                index += index & (-index)\n        \n        def query(index):\n            index += 1\n            result = 0\n            while index > 0:\n                result = max(result, bit[index])\n                index -= index & (-index)\n            return result\n        \n        # Coordinate compression\n        compressed = {v: i for i, v in enumerate(sorted(set(i for _, i in adjusted)))}\n        \n        max_sum = float('-inf')\n        \n        for diff, i in adjusted:\n            current_sum = nums[i] + query(compressed[i])\n            max_sum = max(max_sum, current_sum)\n            update(compressed[i], current_sum)\n        \n        return max_sum\n\nReply with JSON only, in exactly this format:\n{\"reasoning\": \"<your reasoning, at most 100 words>\", \"winner\": \"<A or B>\"}"
+   }
+  ],
+  "max_tokens": 1000,
+  "extra_body": {
+   "thinking": {
+    "type": "disabled"
+   }
+  },
+  "temperature": 1.0,
+  "response_format": {
+   "type": "json_object"
+  }
+ },
+ "sample": 5,
+ "response": {
+  "text": "{\"reasoning\": \"Both responses use the same Fenwick tree approach but differ in coordinate compression. Response A maps each original index to its position in the sorted diff_index list. Since sorting by (nums[i]-i, i), the index i unique, this ordering guarantees that for condition nums[j]-nums[i] >= j-i, i.e., nums[i]-i <= nums[j]-j, we process in increasing adjusted value. Querying compressed[i] (position of index i) returns max sum for adjusted values up to current. This is correct because equal adjusted values can also transition (>=), and processing sorted order handles ties correctly since query includes current compressed index. Response B uses compressed mapping from index to rank based on sorted unique indices, which is wrong—it compresses by index, not by adjusted value. This breaks the ordering needed. Thus A is correct.\", \"winner\": \"A\"}",
+  "reasoning": null,
+  "finish_reason": "stop",
+  "prompt_tokens": 1191,
+  "cache_hit_tokens": 1024,
+  "completion_tokens": 183,
+  "reasoning_tokens": 0,
+  "logprobs": null,
+  "usage": {
+   "completion_tokens": 183,
+   "prompt_tokens": 1191,
+   "total_tokens": 1374,
+   "completion_tokens_details": null,
+   "prompt_tokens_details": {
+    "audio_tokens": null,
+    "cache_write_tokens": null,
+    "cached_tokens": 1024,
+    "image_tokens": null,
+    "text_tokens": null
+   },
+   "prompt_cache_hit_tokens": 1024,
+   "prompt_cache_miss_tokens": 167
+  },
+  "model": "deepseek-flash"
+ },
+ "called_at": "2026-11-21T03:12:20.954886+00:00",
+ "price_period": "offpeak",
+ "cost_usd": 0.00013792199999999998,
+ "latency_s": 2.515
+}

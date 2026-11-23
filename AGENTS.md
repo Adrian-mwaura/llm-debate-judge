@@ -191,6 +191,19 @@ Every change is reviewed by the other member in a pull request before it is merg
   hence votes up to 11 in case the full run costs slightly more), debate `low` → 7, thinking `high` → 7, thinking `low` → 5,
   one-sided → 5. `make_table.py` does this from the full run's own costs in `pairs.jsonl`.
 
+## Building the results table (built)
+
+`python scripts/make_table.py`, logic in `src/debate_judge/table.py`. **The one command that rebuilds every reported number**
+from the committed `results/full/pairs.jsonl`; no API calls. Writes `results/full/table.md`, `table.csv` and
+`accuracy_vs_cost.png`.
+
+- Table 1: every condition on the same pairs: accuracy with a 95% Wilson interval, mean cost per pair, split rate.
+- Table 2: each method against votes at the same cost, using the proposal's rule (`full.matched_k`, measured on the full run's
+  own costs), with Newcombe's paired interval and McNemar's p. **H1 (primary) = debate `high` against its same-cost votes**;
+  all other rows are exploratory. Then H2 (debate `high` minus `low`) and H3 (the H1 comparison by group).
+- The same-cost comparisons are repeated on the 400 report pairs outside the pilot.
+- The plot: the votes as a line (cost against accuracy, k = 1 to 11) and each method as a point, all with 95% intervals.
+
 ## Planned layout
 
 Update this section whenever the layout changes.
@@ -209,7 +222,8 @@ src/debate_judge/
   methods/        our new method                            (method lead)
   pilot.py        dry run and go/no-go pilot logic [built] (evaluation lead)
   full.py         full run on the 600 report pairs, vote baseline, budget guard [built] (evaluation lead)
-scripts/          check_model.py, run_pilot.py, run_full.py [built]; make_table.py
+  table.py        results table, same-cost tests (H1–H3), plot [built] (evaluation lead)
+scripts/          check_model.py, run_pilot.py, run_full.py, make_table.py [built]
 logs/             calls/<run>.jsonl call logs and cache/<xx>/<hash>.json (committed)
 results/          tables and plots (committed)
 report/           proposal and report drafts
